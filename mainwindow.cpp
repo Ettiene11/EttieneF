@@ -4,6 +4,7 @@
 #include <knight.h>
 #include <rook.h>
 #include <bishop.h>
+#include <queen.h>
 
 using namespace std;
 
@@ -160,7 +161,7 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                         {
                            p->setText("WQ");
                         }else{p->setText("BQ");}
-                        t->type = 'Q';
+                        t->type = 'q';
                     }
 
                     if (turn == 'w')
@@ -208,6 +209,7 @@ bool MainWindow::Validpiecemove(char team, char type, int x, int y) //check if s
     Knight knight;
     Rook rook;
     Bishop bishop;
+    Queen queen;
     switch (type) {
     case 'p' :
         if (pawn.ValidMove(team, firstmove, capture, from_xcoord, from_ycoord, x, y, vertical_up_boundary, vertical_down_boundary)) {return true;} break;
@@ -217,6 +219,8 @@ bool MainWindow::Validpiecemove(char team, char type, int x, int y) //check if s
         if (rook.ValidMove(team, from_xcoord, from_ycoord, x, y, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary)) {return true;} break;
     case 'b' :
         if (bishop.ValidMove(team, from_xcoord, from_ycoord, x, y, right_up_diagonal_boundary, left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary)) {return true;} break;
+    case 'q' :
+        if (queen.ValidMove(team, from_xcoord, from_ycoord, x, y, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary,right_up_diagonal_boundary, left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary)) {return true;} break;
     }
     return false;
 }
@@ -262,6 +266,10 @@ void MainWindow::DefaultBoard()
         Makepiece("WB",'b','w',board.AssignxCoord(i),board.AssignyCoord(1));
         Makepiece("BB",'b','b',board.AssignxCoord(i),board.AssignyCoord(8));
     }
+
+    //queen
+    Makepiece("WQ",'q','w',board.AssignxCoord(4),board.AssignyCoord(1));
+    Makepiece("BQ",'q','b',board.AssignxCoord(4),board.AssignyCoord(8));
 }
 
 void MainWindow::Getboundaries()
