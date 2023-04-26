@@ -1,16 +1,31 @@
 #include "pawn.h"
 #include "mainwindow.h"
+#include "board.h"
 
 Pawn::Pawn()
 {
 
 }
 
-bool Pawn::ValidMove(char team, bool firstmove, bool capture, int from_x, int from_y, int to_x, int to_y)
+bool Pawn::ValidMove(char team, bool firstmove, bool capture, int from_x, int from_y, int to_x,
+                     int to_y, int vertical_up_bound, int vertical_down_bound)
 {
     MainWindow mainw;
 
-    if ((firstmove == true) && ((abs(to_y-from_y)) >= 3))
+    if (team == 'w')
+    {
+        vertical_boundary = vertical_up_bound;
+    }else{
+        vertical_boundary = vertical_down_bound;
+    }
+
+    if ((to_x == from_x) && (to_y == from_y))
+    {
+        return false;
+    }else if ((abs(to_y-from_y)) >= vertical_boundary)
+    {
+        return false;
+    }else if ((firstmove == true) && ((abs(to_y-from_y)) >= 3))
     {
         return false;
     }else if (((to_y-from_y) > 0) && (team == 'b'))  //black team moves back (up)

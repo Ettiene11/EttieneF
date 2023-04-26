@@ -36,6 +36,8 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void Makepiece(QString, char, char, int, int);
+    int Vertical_up_boundary();
+    int Vertical_down_boundary();
 
 protected:
     void mousePressEvent(QMouseEvent *event);
@@ -43,27 +45,29 @@ protected:
     //variables inherited by piece classes
     int click_counter = 0;
 
+    //Vector lists
+    QVector<QLabel*> all_pieces;
+    QVector<piecetracker*> piece_tracker;
+
 private:
     // QObjects
 
     // Vector lists
-    QVector<QLabel*> all_pieces;
-    QVector<piecetracker*> piece_tracker;
     QVector<QLabel*> possible_moves;
 
     // Variables
-    int width = 800, height = 800, from_xcoord, from_ycoord, to_xcoord, to_ycoord, enemy_index;
+    int width = 800, height = 800, from_xcoord, from_ycoord, to_xcoord, to_ycoord, enemy_index, min_distance = 999;
     char turn = 'w', clicked_team;
     bool clicked_on_piece = false, firstmove, capture = false;
 
 private slots:
     void DefaultBoard();
-    int GetxPosition(int);
-    int GetyPosition(int);
     bool Clicked_on_Piece(int, int);
     bool Validpiecemove(char, char, int, int);
     bool Validmove(int, int);
     void Delete_possible_moves();
+    int GetxPosition(int);
+    int GetyPosition(int);
 
 };
 

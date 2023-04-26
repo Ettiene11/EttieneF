@@ -7,7 +7,7 @@ class Knight: public MainWindow
 {
 public:
     Knight();
-    bool ValidMove(int, int, int, int);
+    bool ValidMove(char, int, int, int, int);
 };
 
 #endif // KNIGHT_H
