@@ -178,9 +178,40 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                     if (Check_opponent(t->x_cor, t->y_cor, t))
                     {
                         cout << turn << "'s king is in check" << endl;
+                        check = true;
+                        checkmate = true;
+
+                        for (int i = 1; i <= 8; ++i)
+                        {
+                            for (int j = 1; j <= 8; ++j)
+                            {
+                                if ((Validmove(i, j)) && (Validpiecemove(turn,'k',GetxPosition(king_xpos), GetyPosition(king_ypos),i,j)))
+                                {
+                                    QVectorIterator<piecetracker*> tracker(piece_tracker);
+                                    while (tracker.hasNext())
+                                    {
+                                        piecetracker *t = tracker.next();
+
+                                        if (t->team != turn)
+                                        {
+                                            if (Validpiecemove(t->team,t->type,GetxPosition(t->x_cor),GetyPosition(t->y_cor),GetxPosition(king_xpos),GetyPosition(king_ypos)))
+                                            {
+                                                checkmate = false;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (checkmate)
+                        {
+                            cout << "Game over, " << t->team << " won!" << endl;
+                        }
                     }
                 }
-            Delete_possible_moves();
+             Delete_possible_moves();
             return 1;
         }
     }
