@@ -48,7 +48,7 @@ private:
     QVector<QLabel*> possible_moves;
 
     // Variables
-    int width = 800, height = 800, click_counter = 0, from_xcoord, from_ycoord, to_xcoord, to_ycoord;
+    int width = 800, height = 800, click_counter = 0, from_xcoord, from_ycoord, to_xcoord, to_ycoord, enemy_index;
     char turn = 'w', clicked_team;
     bool clicked_on_piece = false, firstmove, capture = false;
 

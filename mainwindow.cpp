@@ -162,22 +162,16 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
             {
                 cout << "not valid move" << endl;
             }else{
+                    if (capture == true)
+                    {
+                        piece_tracker.removeOne(piece_tracker[enemy_index]);
+                        all_pieces[enemy_index]->hide();
+                        all_pieces.removeOne(all_pieces[enemy_index]);
+                    }
+
                     p->move(board.AssignxCoord(to_xcoord), board.AssignyCoord(to_ycoord));
                     t->x_cor = board.AssignxCoord(to_xcoord);
                     t->y_cor = board.AssignyCoord(to_ycoord);
-
-                    QVectorIterator<piecetracker*> tracker2(piece_tracker);
-                    while (tracker2.hasNext())
-                    {
-                        piecetracker *t2 = tracker2.next();
-                        if ((t2->x_cor == board.AssignxCoord(to_xcoord)) && (t2->y_cor == board.AssignyCoord(to_xcoord)))
-                        {
-                            if (t2->team != turn)
-                            {
-
-                            }
-                        }
-                    }
 
                     if (turn == 'w')
                     {
@@ -207,6 +201,7 @@ bool MainWindow::Validmove(int x, int y)  //check if piece moved into open space
             if (t->team != turn)
             {
                 capture = true;
+                enemy_index = piece_tracker.indexOf(t);
                 return true;
             }else{
                 return false;   //moved onto own team's piece, thus invalid move
