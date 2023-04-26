@@ -6,7 +6,7 @@ class Rook: public MainWindow
 {
 public:
     Rook();
-    bool ValidMove(int, int, int, int, int, int, int, int);
+    bool ValidMove(char, int, int, int, int, int, int, int, int);
 
 private:
 

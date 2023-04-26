@@ -2,6 +2,7 @@
 #include <board.h>
 #include <pawn.h>
 #include <knight.h>
+#include <rook.h>
 
 using namespace std;
 
@@ -204,11 +205,14 @@ bool MainWindow::Validpiecemove(char team, char type, int x, int y) //check if s
     Getboundaries();
     Pawn pawn;
     Knight knight;
+    Rook rook;
     switch (type) {
     case 'p' :
         if (pawn.ValidMove(team, firstmove, capture, from_xcoord, from_ycoord, x, y, vertical_up_boundary, vertical_down_boundary)) {return true;} break;
-    case 'k' :
+    case 'n' :
         if (knight.ValidMove(team, from_xcoord, from_ycoord, x, y)) {return true;} break;
+    case 'r' :
+        if (rook.ValidMove(team, from_xcoord, from_ycoord, x, y, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary)) {return true;} break;
     }
     return false;
 }
@@ -234,17 +238,24 @@ void MainWindow::DefaultBoard()
         Makepiece("BP",'p','b',board.AssignxCoord(i),board.AssignyCoord(7));
     }
 
-    //knights
+    //knights (symbol n)
     for (int i = 2; i<=7; i = i+5)
     {
-        Makepiece("WK",'k','w',board.AssignxCoord(i),board.AssignyCoord(1));
-        Makepiece("BK",'k','b',board.AssignxCoord(i),board.AssignyCoord(8));
+        Makepiece("WN",'n','w',board.AssignxCoord(i),board.AssignyCoord(1));
+        Makepiece("BN",'n','b',board.AssignxCoord(i),board.AssignyCoord(8));
+    }
+
+    //rooks
+    for (int i = 1; i<=8; i = i+7)
+    {
+        Makepiece("WR",'r','w',board.AssignxCoord(i),board.AssignyCoord(1));
+        Makepiece("BR",'r','b',board.AssignxCoord(i),board.AssignyCoord(8));
     }
 }
 
 void MainWindow::Getboundaries()
 {
-    int vert_up_min = 999, vert_down_min = 999;
+    int vert_up_min = 999, vert_down_min = 999, hort_left_min = 999, hort_right_min = 999;
     QVectorIterator<piecetracker*> tracker(piece_tracker);
     while(tracker.hasNext())
     {
@@ -271,9 +282,33 @@ void MainWindow::Getboundaries()
                 }
             }
         }
+        //horisontal
+        if (GetyPosition(t->y_cor) == from_ycoord)
+        {
+            //hort_right
+            if (GetxPosition(t->x_cor) > from_xcoord)
+            {
+                int distance = abs(GetxPosition(t->x_cor)-from_xcoord);
+                if (hort_right_min>distance)
+                {
+                    hort_right_min = distance;
+                }
+            }
+            //hort_left
+            if (GetxPosition(t->x_cor) < from_xcoord)
+            {
+                int distance = abs(GetxPosition(t->x_cor)-from_xcoord);
+                if (hort_left_min>distance)
+                {
+                    hort_left_min = distance;
+                }
+            }
+        }
     }
     vertical_up_boundary = vert_up_min;
     vertical_down_boundary = vert_down_min;
+    horizontal_left_boundary = hort_left_min;
+    horizontal_right_boundary = hort_right_min;
 }
 
 MainWindow::~MainWindow()
