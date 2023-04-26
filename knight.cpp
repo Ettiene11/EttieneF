@@ -18,16 +18,6 @@ bool Knight::ValidMove(char team, int from_x, int from_y, int to_x, int to_y)
     long_up = from_y+2;
     long_down = from_y-2;
 
-    QVectorIterator<piecetracker*> tracker(piece_tracker);
-    while (tracker.hasNext())
-    {
-        piecetracker *t = tracker.next();
-        if ((t->team == team) && (t->x_cor == board.AssignxCoord(to_x)) && (t->y_cor == board.AssignyCoord(to_y)))  //may not move onto own team's piece
-        {
-            return false;
-        }
-    }
-
     if ((to_x == short_right) && ((to_y == long_up)))
     {                                                       //   |
         return true;                                        //  _|

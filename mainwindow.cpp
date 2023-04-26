@@ -3,6 +3,7 @@
 #include <pawn.h>
 #include <knight.h>
 #include <rook.h>
+#include <bishop.h>
 
 using namespace std;
 
@@ -192,7 +193,7 @@ bool MainWindow::Validmove(int x, int y)  //check if piece moved into open space
                 capture = true;
                 enemy_index = piece_tracker.indexOf(t);
                 return true;
-            }
+            }else{return false;}
         }
     }
 
@@ -206,6 +207,7 @@ bool MainWindow::Validpiecemove(char team, char type, int x, int y) //check if s
     Pawn pawn;
     Knight knight;
     Rook rook;
+    Bishop bishop;
     switch (type) {
     case 'p' :
         if (pawn.ValidMove(team, firstmove, capture, from_xcoord, from_ycoord, x, y, vertical_up_boundary, vertical_down_boundary)) {return true;} break;
@@ -213,6 +215,8 @@ bool MainWindow::Validpiecemove(char team, char type, int x, int y) //check if s
         if (knight.ValidMove(team, from_xcoord, from_ycoord, x, y)) {return true;} break;
     case 'r' :
         if (rook.ValidMove(team, from_xcoord, from_ycoord, x, y, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary)) {return true;} break;
+    case 'b' :
+        if (bishop.ValidMove(team, from_xcoord, from_ycoord, x, y, right_up_diagonal_boundary, left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary)) {return true;} break;
     }
     return false;
 }
@@ -251,11 +255,19 @@ void MainWindow::DefaultBoard()
         Makepiece("WR",'r','w',board.AssignxCoord(i),board.AssignyCoord(1));
         Makepiece("BR",'r','b',board.AssignxCoord(i),board.AssignyCoord(8));
     }
+
+    //bishop
+    for (int i = 3; i<=6; i = i+3)
+    {
+        Makepiece("WB",'b','w',board.AssignxCoord(i),board.AssignyCoord(1));
+        Makepiece("BB",'b','b',board.AssignxCoord(i),board.AssignyCoord(8));
+    }
 }
 
 void MainWindow::Getboundaries()
 {
-    int vert_up_min = 999, vert_down_min = 999, hort_left_min = 999, hort_right_min = 999;
+    int vert_up_min = 999, vert_down_min = 999, hort_left_min = 999, hort_right_min = 999,
+            right_up_diagonal_bound = 999, right_down_diagonal_bound = 999, left_up_diagonal_bound = 999, left_down_diagonal_bound = 999;
     QVectorIterator<piecetracker*> tracker(piece_tracker);
     while(tracker.hasNext())
     {
@@ -304,11 +316,55 @@ void MainWindow::Getboundaries()
                 }
             }
         }
+        //diagonal
+        if ((abs(GetyPosition(t->y_cor) - from_ycoord)) == (abs(GetxPosition(t->x_cor) - from_xcoord)))
+        {
+            //right_up
+            if (((GetyPosition(t->y_cor) - from_ycoord) > 0) && ((GetxPosition(t->x_cor) - from_xcoord) > 0))
+            {
+                int distance = abs(GetxPosition(t->x_cor)-from_xcoord);
+                if (right_up_diagonal_bound>distance)
+                {
+                    right_up_diagonal_bound = distance;
+                }
+            }
+            //left_up
+            if (((GetyPosition(t->y_cor) - from_ycoord) > 0) && ((from_xcoord - GetxPosition(t->x_cor)) > 0))
+            {
+                int distance = abs(GetxPosition(t->x_cor)-from_xcoord);
+                if (left_up_diagonal_bound>distance)
+                {
+                    left_up_diagonal_bound = distance;
+                }
+            }
+            //left_down
+            if (((from_ycoord - GetyPosition(t->y_cor)) > 0) && ((from_xcoord - GetxPosition(t->x_cor)) > 0))
+            {
+                int distance = abs(GetxPosition(t->x_cor)-from_xcoord);
+                if (left_down_diagonal_bound>distance)
+                {
+                    left_down_diagonal_bound = distance;
+                }
+            }
+            //right_down
+            if (((from_ycoord - GetyPosition(t->y_cor)) > 0) && ((GetxPosition(t->x_cor) - from_xcoord) > 0))
+            {
+                int distance = abs(GetxPosition(t->x_cor)-from_xcoord);
+                if (right_down_diagonal_bound>distance)
+                {
+                    right_down_diagonal_bound = distance;
+                }
+            }
+        }
     }
     vertical_up_boundary = vert_up_min;
     vertical_down_boundary = vert_down_min;
     horizontal_left_boundary = hort_left_min;
     horizontal_right_boundary = hort_right_min;
+    right_up_diagonal_boundary = right_up_diagonal_bound;
+    left_up_diagonal_boundary = left_up_diagonal_bound;
+    right_down_diagonal_boundary = right_down_diagonal_bound;
+    left_down_diagonal_boundary = left_down_diagonal_bound;
 }
 
 MainWindow::~MainWindow()

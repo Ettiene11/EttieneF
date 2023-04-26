@@ -25,6 +25,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        bishop.cpp \
         board.cpp \
         knight.cpp \
         main.cpp \
@@ -33,6 +34,7 @@ SOURCES += \
         rook.cpp
 
 HEADERS += \
+        bishop.h \
         board.h \
         knight.h \
         mainwindow.h \

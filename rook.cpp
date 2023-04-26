@@ -9,15 +9,6 @@ bool Rook::ValidMove(char team, int from_x, int from_y, int to_x,int to_y, int v
                      int horizontal_left_bound, int horizontal_right_bound)
 {
     board board;
-    QVectorIterator<piecetracker*> tracker(piece_tracker);
-    while (tracker.hasNext())
-    {
-        piecetracker *t = tracker.next();
-        if ((t->team == team) && (t->x_cor == board.AssignxCoord(to_x)) && (t->y_cor == board.AssignyCoord(to_y)))  //may not move onto own team's piece
-        {
-            return false;
-        }
-    }
 
     if ((from_x == to_x) && (from_y == to_y))
     {

@@ -57,6 +57,7 @@ private:
     // Variables
     int width = 800, height = 800, from_xcoord, from_ycoord, to_xcoord, to_ycoord, enemy_index;
     int vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary;
+    int right_up_diagonal_boundary, right_down_diagonal_boundary, left_up_diagonal_boundary, left_down_diagonal_boundary;
     char turn = 'w', clicked_team;
     bool clicked_on_piece = false, firstmove, capture = false;
 
