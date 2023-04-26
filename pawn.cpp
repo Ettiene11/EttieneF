@@ -38,6 +38,5 @@ bool Pawn::ValidMove(char team, bool firstmove, bool capture, int from_x, int fr
            return false;
         }
     }
-
     return true;
 }

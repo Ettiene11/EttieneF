@@ -173,6 +173,16 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                     t->x_cor = board.AssignxCoord(to_xcoord);
                     t->y_cor = board.AssignyCoord(to_ycoord);
 
+                    if (((t->type == 'p')&&(t->team == 'w')&&(t->y_cor == 0))             //see if pawn can be transformed
+                            || ((t->type == 'p')&&(t->team == 'b')&&(t->y_cor == 700)))
+                    {
+                        if (t->team == 'w')
+                        {
+                           p->setText("WQ");
+                        }else{p->setText("BQ");}
+                        t->type = 'Q';
+                    }
+
                     if (turn == 'w')
                     {
                         turn = 'b';

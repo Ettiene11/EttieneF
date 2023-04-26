@@ -39,6 +39,9 @@ public:
 protected:
     void mousePressEvent(QMouseEvent *event);
 
+    //variables inherited by piece classes
+    int click_counter = 0;
+
 private:
     // QObjects
 
@@ -48,7 +51,7 @@ private:
     QVector<QLabel*> possible_moves;
 
     // Variables
-    int width = 800, height = 800, click_counter = 0, from_xcoord, from_ycoord, to_xcoord, to_ycoord, enemy_index;
+    int width = 800, height = 800, from_xcoord, from_ycoord, to_xcoord, to_ycoord, enemy_index;
     char turn = 'w', clicked_team;
     bool clicked_on_piece = false, firstmove, capture = false;
 
