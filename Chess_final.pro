@@ -26,12 +26,14 @@ CONFIG += c++11
 
 SOURCES += \
         board.cpp \
+        knight.cpp \
         main.cpp \
         mainwindow.cpp \
         pawn.cpp
 
 HEADERS += \
         board.h \
+        knight.h \
         mainwindow.h \
         pawn.h
 

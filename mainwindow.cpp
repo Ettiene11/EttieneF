@@ -106,43 +106,20 @@ int MainWindow::GetyPosition(int ycoord)
     }
 }
 
-void MainWindow::DefaultBoard()
+void MainWindow::Makepiece(QString text, char type, char team, int x, int y)
 {
-    //white pawns
-    board board;
-    for (int i = 1; i<=8; ++i)
-    {
-        QLabel* new_piece = new QLabel(this);
-        new_piece->setText("WP");
-        new_piece->show();
-        new_piece->move(board.AssignxCoord(i), board.AssignyCoord(2));
-        all_pieces.append(new_piece);
+    QLabel* new_piece = new QLabel(this);
+    new_piece->setText(text);
+    new_piece->show();
+    new_piece->move(x, y);
+    all_pieces.append(new_piece);
 
-        piecetracker* new_piecetracker = new piecetracker;
-        new_piecetracker->team = 'w';
-        new_piecetracker->type = 'p';
-        new_piecetracker->x_cor = board.AssignxCoord(i);
-        new_piecetracker->y_cor = board.AssignyCoord(2);
-        piece_tracker.append(new_piecetracker);
-    }
-
-    //black pawns
-    for (int i = 1; i<=8; ++i)
-    {
-        QLabel* new_piece = new QLabel(this);
-        new_piece->setText("BP");
-        new_piece->show();
-        new_piece->move(board.AssignxCoord(i), board.AssignyCoord(7));
-        all_pieces.append(new_piece);
-
-        piecetracker* new_piecetracker = new piecetracker;
-        new_piecetracker->team = 'b';
-        new_piecetracker->type = 'p';
-        new_piecetracker->x_cor = board.AssignxCoord(i);
-        new_piecetracker->y_cor = board.AssignyCoord(7);
-        piece_tracker.append(new_piecetracker);
-    }
-
+    piecetracker* new_piecetracker = new piecetracker;
+    new_piecetracker->team = team;
+    new_piecetracker->type = type;
+    new_piecetracker->x_cor = x;
+    new_piecetracker->y_cor = y;
+    piece_tracker.append(new_piecetracker);
 }
 
 bool MainWindow::Clicked_on_Piece(int x, int y)
@@ -244,6 +221,26 @@ void MainWindow::Delete_possible_moves()
         pos_moves.next()->hide();
     }
     possible_moves.clear();
+}
+
+void MainWindow::DefaultBoard()
+{
+    board board;
+    //pawns
+    for (int i = 1; i<=8; ++i)
+    {
+        Makepiece("WP",'p','w',board.AssignxCoord(i),board.AssignyCoord(2));
+        Makepiece("BP",'p','b',board.AssignxCoord(i),board.AssignyCoord(7));
+    }
+
+    //knights
+    for (int i = 2; i<=7; i = i+5)
+    {
+        Makepiece("WK",'k','w',board.AssignxCoord(i),board.AssignyCoord(1));
+        Makepiece("BK",'k','b',board.AssignxCoord(i),board.AssignyCoord(8));
+    }
+
+
 }
 
 MainWindow::~MainWindow()

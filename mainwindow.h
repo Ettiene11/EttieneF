@@ -35,6 +35,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    void Makepiece(QString, char, char, int, int);
 
 protected:
     void mousePressEvent(QMouseEvent *event);
