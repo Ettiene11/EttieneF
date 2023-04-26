@@ -55,13 +55,16 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
                 {
                     for (int j = 1; j <= 8; ++j)
                     {
-                        if ((Validmove(i, j)) && (Validpiecemove(t->team,t->type,i,j)))
+                        if ((Validmove(i, j)) && (Validpiecemove(t->team,t->type,from_xcoord, from_ycoord,i,j)))
                         {
-                            QLabel* new_move = new QLabel(this);
-                            new_move->setText("X");
-                            new_move->show();
-                            new_move->move(board.AssignxCoord(i), board.AssignyCoord(j));
-                            possible_moves.append(new_move);
+                            if (!Check_yourself(t->team,i,j,t))
+                            {
+                                QLabel* new_move = new QLabel(this);
+                                new_move->setText("X");
+                                new_move->show();
+                                new_move->move(board.AssignxCoord(i), board.AssignyCoord(j));
+                                possible_moves.append(new_move);
+                            }
                         }
                     }
                 }
@@ -140,7 +143,7 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
 
         if ((board.AssignxCoord(x) == t->x_cor) && (board.AssignyCoord(y) == t->y_cor))
         {
-            if ((!(Validmove(to_xcoord, to_ycoord))) || (!(Validpiecemove(t->team,t->type,to_xcoord,to_ycoord))))
+            if ((!(Validmove(to_xcoord, to_ycoord))) || (!(Validpiecemove(t->team,t->type,from_xcoord, from_ycoord,to_xcoord,to_ycoord))))
             {
                 cout << "not valid move" << endl;
             }else{
@@ -171,6 +174,11 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                     }else{
                         turn = 'w';
                     }
+
+                    if (Check_opponent(t->x_cor, t->y_cor, t))
+                    {
+                        cout << turn << "'s king is in check" << endl;
+                    }
                 }
             Delete_possible_moves();
             return 1;
@@ -183,6 +191,9 @@ bool MainWindow::Validmove(int x, int y)  //check if piece moved into open space
 {
     board board;
     QVectorIterator<piecetracker*> tracker(piece_tracker);
+
+    //if x and y is your from coordinates can I move to opponents king?
+
 
     while (tracker.hasNext())
     {
@@ -203,9 +214,9 @@ bool MainWindow::Validmove(int x, int y)  //check if piece moved into open space
     return true;  //open space thus valid move
 }
 
-bool MainWindow::Validpiecemove(char team, char type, int x, int y) //check if specific piece has valid move based on its specific characteristical moves
+bool MainWindow::Validpiecemove(char team, char type, int from_x, int from_y, int x, int y) //check if specific piece has valid move based on its specific characteristical moves
 {
-    Getboundaries();
+    Getboundaries(from_x, from_y);
     Pawn pawn;
     Knight knight;
     Rook rook;
@@ -214,17 +225,17 @@ bool MainWindow::Validpiecemove(char team, char type, int x, int y) //check if s
     King king;
     switch (type) {
     case 'p' :
-        if (pawn.ValidMove(team, firstmove, capture, from_xcoord, from_ycoord, x, y, vertical_up_boundary, vertical_down_boundary)) {return true;} break;
+        if (pawn.ValidMove(team, firstmove, capture, from_x, from_y, x, y, vertical_up_boundary, vertical_down_boundary)) {return true;} break;
     case 'n' :
-        if (knight.ValidMove(team, from_xcoord, from_ycoord, x, y)) {return true;} break;
+        if (knight.ValidMove(team, from_x, from_y, x, y)) {return true;} break;
     case 'r' :
-        if (rook.ValidMove(team, from_xcoord, from_ycoord, x, y, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary)) {return true;} break;
+        if (rook.ValidMove(team, from_x, from_y, x, y, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary)) {return true;} break;
     case 'b' :
-        if (bishop.ValidMove(team, from_xcoord, from_ycoord, x, y, right_up_diagonal_boundary, left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary)) {return true;} break;
+        if (bishop.ValidMove(team, from_x, from_y, x, y, right_up_diagonal_boundary, left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary)) {return true;} break;
     case 'q' :
-        if (queen.ValidMove(team, from_xcoord, from_ycoord, x, y, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary,right_up_diagonal_boundary, left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary)) {return true;} break;
+        if (queen.ValidMove(team, from_x, from_y, x, y, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary,right_up_diagonal_boundary, left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary)) {return true;} break;
     case 'k' :
-        if (king.ValidMove(team, check, from_xcoord, from_ycoord, x, y)) {return true;} break;
+        if (king.ValidMove(team, check, from_x, from_y, x, y)) {return true;} break;
     }
     return false;
 }
@@ -280,7 +291,7 @@ void MainWindow::DefaultBoard()
     Makepiece("BK",'k','b',board.AssignxCoord(5),board.AssignyCoord(8));
 }
 
-void MainWindow::Getboundaries()
+void MainWindow::Getboundaries(int from_x, int from_y)
 {
     int vert_up_min = 999, vert_down_min = 999, hort_left_min = 999, hort_right_min = 999,
             right_up_diagonal_bound = 999, right_down_diagonal_bound = 999, left_up_diagonal_bound = 999, left_down_diagonal_bound = 999;
@@ -289,21 +300,21 @@ void MainWindow::Getboundaries()
     {
         piecetracker *t = tracker.next();
         //vertical
-        if (GetxPosition(t->x_cor) == from_xcoord)
+        if (GetxPosition(t->x_cor) == from_x)
         {
             //vert_up
-            if (GetyPosition(t->y_cor) > from_ycoord)
+            if (GetyPosition(t->y_cor) > from_y)
             {
-                int distance = abs(GetyPosition(t->y_cor)-from_ycoord);
+                int distance = abs(GetyPosition(t->y_cor)-from_y);
                 if (vert_up_min>distance)
                 {
                     vert_up_min = distance;
                 }
             }
             //vert_down
-            if (GetyPosition(t->y_cor) < from_ycoord)
+            if (GetyPosition(t->y_cor) < from_y)
             {
-                int distance = abs(GetyPosition(t->y_cor)-from_ycoord);
+                int distance = abs(GetyPosition(t->y_cor)-from_y);
                 if (vert_down_min>distance)
                 {
                     vert_down_min = distance;
@@ -311,21 +322,21 @@ void MainWindow::Getboundaries()
             }
         }
         //horisontal
-        if (GetyPosition(t->y_cor) == from_ycoord)
+        if (GetyPosition(t->y_cor) == from_y)
         {
             //hort_right
-            if (GetxPosition(t->x_cor) > from_xcoord)
+            if (GetxPosition(t->x_cor) > from_x)
             {
-                int distance = abs(GetxPosition(t->x_cor)-from_xcoord);
+                int distance = abs(GetxPosition(t->x_cor)-from_x);
                 if (hort_right_min>distance)
                 {
                     hort_right_min = distance;
                 }
             }
             //hort_left
-            if (GetxPosition(t->x_cor) < from_xcoord)
+            if (GetxPosition(t->x_cor) < from_x)
             {
-                int distance = abs(GetxPosition(t->x_cor)-from_xcoord);
+                int distance = abs(GetxPosition(t->x_cor)-from_x);
                 if (hort_left_min>distance)
                 {
                     hort_left_min = distance;
@@ -333,39 +344,39 @@ void MainWindow::Getboundaries()
             }
         }
         //diagonal
-        if ((abs(GetyPosition(t->y_cor) - from_ycoord)) == (abs(GetxPosition(t->x_cor) - from_xcoord)))
+        if ((abs(GetyPosition(t->y_cor) - from_y)) == (abs(GetxPosition(t->x_cor) - from_x)))
         {
             //right_up
-            if (((GetyPosition(t->y_cor) - from_ycoord) > 0) && ((GetxPosition(t->x_cor) - from_xcoord) > 0))
+            if (((GetyPosition(t->y_cor) - from_y) > 0) && ((GetxPosition(t->x_cor) - from_x) > 0))
             {
-                int distance = abs(GetxPosition(t->x_cor)-from_xcoord);
+                int distance = abs(GetxPosition(t->x_cor)-from_x);
                 if (right_up_diagonal_bound>distance)
                 {
                     right_up_diagonal_bound = distance;
                 }
             }
             //left_up
-            if (((GetyPosition(t->y_cor) - from_ycoord) > 0) && ((from_xcoord - GetxPosition(t->x_cor)) > 0))
+            if (((GetyPosition(t->y_cor) - from_y) > 0) && ((from_x - GetxPosition(t->x_cor)) > 0))
             {
-                int distance = abs(GetxPosition(t->x_cor)-from_xcoord);
+                int distance = abs(GetxPosition(t->x_cor)-from_x);
                 if (left_up_diagonal_bound>distance)
                 {
                     left_up_diagonal_bound = distance;
                 }
             }
             //left_down
-            if (((from_ycoord - GetyPosition(t->y_cor)) > 0) && ((from_xcoord - GetxPosition(t->x_cor)) > 0))
+            if (((from_y - GetyPosition(t->y_cor)) > 0) && ((from_x - GetxPosition(t->x_cor)) > 0))
             {
-                int distance = abs(GetxPosition(t->x_cor)-from_xcoord);
+                int distance = abs(GetxPosition(t->x_cor)-from_x);
                 if (left_down_diagonal_bound>distance)
                 {
                     left_down_diagonal_bound = distance;
                 }
             }
             //right_down
-            if (((from_ycoord - GetyPosition(t->y_cor)) > 0) && ((GetxPosition(t->x_cor) - from_xcoord) > 0))
+            if (((from_y - GetyPosition(t->y_cor)) > 0) && ((GetxPosition(t->x_cor) - from_x) > 0))
             {
-                int distance = abs(GetxPosition(t->x_cor)-from_xcoord);
+                int distance = abs(GetxPosition(t->x_cor)-from_x);
                 if (right_down_diagonal_bound>distance)
                 {
                     right_down_diagonal_bound = distance;
@@ -381,6 +392,79 @@ void MainWindow::Getboundaries()
     left_up_diagonal_boundary = left_up_diagonal_bound;
     right_down_diagonal_boundary = right_down_diagonal_bound;
     left_down_diagonal_boundary = left_down_diagonal_bound;
+}
+
+bool MainWindow::Check_yourself(char team, int to_x, int to_y, piecetracker* piecetrack)
+{
+    board board;
+    bool check_opponent = false;
+
+    piecetrack->x_cor = board.AssignxCoord(to_x);
+    piecetrack->y_cor = board.AssignyCoord(to_y);
+
+    QVectorIterator<piecetracker*> tracker(piece_tracker);
+    while (tracker.hasNext())
+    {
+        piecetracker *t = tracker.next();
+
+        if (t->type == 'k')
+        {
+            if (t->team == team)
+            {
+                king_xpos = t->x_cor;
+                king_ypos = t->y_cor;
+                break;
+            }
+        }
+    }
+
+    tracker.toFront();
+    while (tracker.hasNext())
+    {
+        piecetracker *t = tracker.next();
+
+        if (t->team != team)
+        {
+            if (!Validpiecemove(t->team,t->type,GetxPosition(t->x_cor),GetyPosition(t->y_cor),GetxPosition(king_xpos),GetyPosition(king_ypos)))
+            {
+                check_opponent = false;
+            }else{
+                check_opponent = true;
+                break;
+            }
+        }
+    }
+        piecetrack->x_cor = board.AssignxCoord(from_xcoord);
+        piecetrack->y_cor = board.AssignyCoord(from_ycoord);
+
+    return check_opponent;
+}
+
+bool MainWindow::Check_opponent(int from_x, int from_y, piecetracker* piecetrack)
+{
+    board board;
+    QVectorIterator<piecetracker*> tracker(piece_tracker);
+    while (tracker.hasNext())
+    {
+        piecetracker *t = tracker.next();
+
+        if (t->type == 'k')
+        {
+            if (t->team != piecetrack->team)
+            {
+                king_xpos = t->x_cor;
+                king_ypos = t->y_cor;
+                break;
+            }
+        }
+    }
+
+    if (!Validpiecemove(piecetrack->team,piecetrack->type,GetxPosition(from_x),GetyPosition(from_y),GetxPosition(king_xpos),GetyPosition(king_ypos)))
+    {
+        return false;
+    }else{
+        return true;
+    }
 }
 
 MainWindow::~MainWindow()
