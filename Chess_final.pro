@@ -27,6 +27,7 @@ CONFIG += c++11
 SOURCES += \
         bishop.cpp \
         board.cpp \
+        king.cpp \
         knight.cpp \
         main.cpp \
         mainwindow.cpp \
@@ -37,6 +38,7 @@ SOURCES += \
 HEADERS += \
         bishop.h \
         board.h \
+        king.h \
         knight.h \
         mainwindow.h \
         pawn.h \

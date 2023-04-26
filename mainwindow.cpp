@@ -5,6 +5,7 @@
 #include <rook.h>
 #include <bishop.h>
 #include <queen.h>
+#include <king.h>
 
 using namespace std;
 
@@ -210,6 +211,7 @@ bool MainWindow::Validpiecemove(char team, char type, int x, int y) //check if s
     Rook rook;
     Bishop bishop;
     Queen queen;
+    King king;
     switch (type) {
     case 'p' :
         if (pawn.ValidMove(team, firstmove, capture, from_xcoord, from_ycoord, x, y, vertical_up_boundary, vertical_down_boundary)) {return true;} break;
@@ -221,6 +223,8 @@ bool MainWindow::Validpiecemove(char team, char type, int x, int y) //check if s
         if (bishop.ValidMove(team, from_xcoord, from_ycoord, x, y, right_up_diagonal_boundary, left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary)) {return true;} break;
     case 'q' :
         if (queen.ValidMove(team, from_xcoord, from_ycoord, x, y, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary,right_up_diagonal_boundary, left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary)) {return true;} break;
+    case 'k' :
+        if (king.ValidMove(team, check, from_xcoord, from_ycoord, x, y)) {return true;} break;
     }
     return false;
 }
@@ -260,16 +264,20 @@ void MainWindow::DefaultBoard()
         Makepiece("BR",'r','b',board.AssignxCoord(i),board.AssignyCoord(8));
     }
 
-    //bishop
+    //bishops
     for (int i = 3; i<=6; i = i+3)
     {
         Makepiece("WB",'b','w',board.AssignxCoord(i),board.AssignyCoord(1));
         Makepiece("BB",'b','b',board.AssignxCoord(i),board.AssignyCoord(8));
     }
 
-    //queen
+    //queens
     Makepiece("WQ",'q','w',board.AssignxCoord(4),board.AssignyCoord(1));
     Makepiece("BQ",'q','b',board.AssignxCoord(4),board.AssignyCoord(8));
+
+    //kings
+    Makepiece("WK",'k','w',board.AssignxCoord(5),board.AssignyCoord(1));
+    Makepiece("BK",'k','b',board.AssignxCoord(5),board.AssignyCoord(8));
 }
 
 void MainWindow::Getboundaries()
