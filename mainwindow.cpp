@@ -191,8 +191,6 @@ bool MainWindow::Validmove(int x, int y)  //check if piece moved into open space
                 capture = true;
                 enemy_index = piece_tracker.indexOf(t);
                 return true;
-            }else{
-//                return false;   //moved onto own team's piece, thus invalid move
             }
         }
     }
@@ -203,11 +201,12 @@ bool MainWindow::Validmove(int x, int y)  //check if piece moved into open space
 
 bool MainWindow::Validpiecemove(char team, char type, int x, int y) //check if specific piece has valid move based on its specific characteristical moves
 {
+    Getboundaries();
     Pawn pawn;
     Knight knight;
     switch (type) {
     case 'p' :
-        if (pawn.ValidMove(team, firstmove, capture, from_xcoord, from_ycoord, x, y, Vertical_up_boundary(), Vertical_down_boundary())) {return true;} break;
+        if (pawn.ValidMove(team, firstmove, capture, from_xcoord, from_ycoord, x, y, vertical_up_boundary, vertical_down_boundary)) {return true;} break;
     case 'k' :
         if (knight.ValidMove(team, from_xcoord, from_ycoord, x, y)) {return true;} break;
     }
@@ -243,50 +242,38 @@ void MainWindow::DefaultBoard()
     }
 }
 
-int MainWindow::Vertical_up_boundary()
+void MainWindow::Getboundaries()
 {
-    QVectorIterator<piecetracker*> tracker(piece_tracker);        //check pieces in path vertically from piece
+    int vert_up_min = 999, vert_down_min = 999;
+    QVectorIterator<piecetracker*> tracker(piece_tracker);
     while(tracker.hasNext())
     {
         piecetracker *t = tracker.next();
+        //vertical
         if (GetxPosition(t->x_cor) == from_xcoord)
         {
-            if (GetyPosition(t->y_cor) > from_ycoord)  //above of white piece or below black piece
+            //vert_up
+            if (GetyPosition(t->y_cor) > from_ycoord)
             {
-                int distance = GetyPosition(t->y_cor)-from_ycoord;
-                if (min_distance>distance)
+                int distance = abs(GetyPosition(t->y_cor)-from_ycoord);
+                if (vert_up_min>distance)
                 {
-                    min_distance = distance;
+                    vert_up_min = distance;
+                }
+            }
+            //vert_down
+            if (GetyPosition(t->y_cor) < from_ycoord)
+            {
+                int distance = abs(GetyPosition(t->y_cor)-from_ycoord);
+                if (vert_down_min>distance)
+                {
+                    vert_down_min = distance;
                 }
             }
         }
     }
-    int temp = min_distance;
-    min_distance = 999;
-    return temp;
-}
-
-int MainWindow::Vertical_down_boundary()
-{
-    QVectorIterator<piecetracker*> tracker(piece_tracker);        //check pieces in path vertically from piece
-    while(tracker.hasNext())
-    {
-        piecetracker *t = tracker.next();
-        if (GetxPosition(t->x_cor) == from_xcoord)
-        {
-            if (GetyPosition(t->y_cor) < from_ycoord)  //above of white piece or below black piece
-            {
-                int distance = from_ycoord-GetyPosition(t->y_cor);
-                if (min_distance>distance)
-                {
-                    min_distance = distance;
-                }
-            }
-        }
-    }
-    int temp = min_distance;
-    min_distance = 999;
-    return temp;
+    vertical_up_boundary = vert_up_min;
+    vertical_down_boundary = vert_down_min;
 }
 
 MainWindow::~MainWindow()

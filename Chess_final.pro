@@ -29,13 +29,15 @@ SOURCES += \
         knight.cpp \
         main.cpp \
         mainwindow.cpp \
-        pawn.cpp
+        pawn.cpp \
+        rook.cpp
 
 HEADERS += \
         board.h \
         knight.h \
         mainwindow.h \
-        pawn.h
+        pawn.h \
+        rook.h
 
 FORMS += \
         mainwindow.ui

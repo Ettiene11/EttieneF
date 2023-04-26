@@ -36,8 +36,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void Makepiece(QString, char, char, int, int);
-    int Vertical_up_boundary();
-    int Vertical_down_boundary();
+    void Getboundaries();
 
 protected:
     void mousePressEvent(QMouseEvent *event);
@@ -56,7 +55,8 @@ private:
     QVector<QLabel*> possible_moves;
 
     // Variables
-    int width = 800, height = 800, from_xcoord, from_ycoord, to_xcoord, to_ycoord, enemy_index, min_distance = 999;
+    int width = 800, height = 800, from_xcoord, from_ycoord, to_xcoord, to_ycoord, enemy_index;
+    int vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary;
     char turn = 'w', clicked_team;
     bool clicked_on_piece = false, firstmove, capture = false;
 
