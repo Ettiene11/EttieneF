@@ -57,7 +57,7 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
                     {
                         if ((Validmove(i, j)) && (Validpiecemove(t->team,t->type,from_xcoord, from_ycoord,i,j)))
                         {
-                            if (!Check_yourself(t->team,i,j,t))
+                            if (!Check_yourself(t->team,from_xcoord, from_ycoord,i,j,t))
                             {
                                 QLabel* new_move = new QLabel(this);
                                 new_move->setText("X");
@@ -143,7 +143,7 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
 
         if ((board.AssignxCoord(x) == t->x_cor) && (board.AssignyCoord(y) == t->y_cor))
         {
-            if ((!(Validmove(to_xcoord, to_ycoord))) || (!(Validpiecemove(t->team,t->type,from_xcoord, from_ycoord,to_xcoord,to_ycoord))))
+            if ((!(Validmove(to_xcoord, to_ycoord))) || (!(Validpiecemove(t->team,t->type,from_xcoord, from_ycoord,to_xcoord,to_ycoord))) || Check_yourself(t->team,from_xcoord, from_ycoord,to_xcoord,to_ycoord,t))
             {
                 cout << "not valid move" << endl;
             }else{
@@ -177,41 +177,16 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
 
                     if (Check_opponent(t->x_cor, t->y_cor, t))
                     {
-                        cout << turn << "'s king is in check" << endl;
-                        check = true;
-                        checkmate = true;
-
-                        for (int i = 1; i <= 8; ++i)
+                        cout << turn << "'s king is in check, checking for possible checkmate..." << endl;
+                        if (Checkmate())
                         {
-                            for (int j = 1; j <= 8; ++j)
-                            {
-                                if ((Validmove(i, j)) && (Validpiecemove(turn,'k',GetxPosition(king_xpos), GetyPosition(king_ypos),i,j)))
-                                {
-                                    QVectorIterator<piecetracker*> tracker(piece_tracker);
-                                    while (tracker.hasNext())
-                                    {
-                                        piecetracker *t = tracker.next();
-
-                                        if (t->team != turn)
-                                        {
-                                            if (Validpiecemove(t->team,t->type,GetxPosition(t->x_cor),GetyPosition(t->y_cor),GetxPosition(king_xpos),GetyPosition(king_ypos)))
-                                            {
-                                                checkmate = false;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        if (checkmate)
-                        {
-                            cout << "Game over, " << t->team << " won!" << endl;
+                           cout << "Checkmate, " << t->team << " won!" << endl;
+                        }else{
+                           cout << turn << "'s king is in check, no checkmate!" << endl;
                         }
                     }
                 }
-             Delete_possible_moves();
+            Delete_possible_moves();
             return 1;
         }
     }
@@ -222,9 +197,6 @@ bool MainWindow::Validmove(int x, int y)  //check if piece moved into open space
 {
     board board;
     QVectorIterator<piecetracker*> tracker(piece_tracker);
-
-    //if x and y is your from coordinates can I move to opponents king?
-
 
     while (tracker.hasNext())
     {
@@ -425,10 +397,11 @@ void MainWindow::Getboundaries(int from_x, int from_y)
     left_down_diagonal_boundary = left_down_diagonal_bound;
 }
 
-bool MainWindow::Check_yourself(char team, int to_x, int to_y, piecetracker* piecetrack)
+bool MainWindow::Check_yourself(char team, int from_x, int from_y, int to_x, int to_y, piecetracker* piecetrack)
 {
     board board;
-    bool check_opponent = false;
+    bool check_opponent = false, capture_state;
+    capture_state = capture;
 
     piecetrack->x_cor = board.AssignxCoord(to_x);
     piecetrack->y_cor = board.AssignyCoord(to_y);
@@ -456,23 +429,27 @@ bool MainWindow::Check_yourself(char team, int to_x, int to_y, piecetracker* pie
 
         if (t->team != team)
         {
-            if (!Validpiecemove(t->team,t->type,GetxPosition(t->x_cor),GetyPosition(t->y_cor),GetxPosition(king_xpos),GetyPosition(king_ypos)))
+            capture = true;
+            if (Validpiecemove(t->team,t->type,GetxPosition(t->x_cor),GetyPosition(t->y_cor),GetxPosition(king_xpos),GetyPosition(king_ypos)))
             {
-                check_opponent = false;
-            }else{
                 check_opponent = true;
                 break;
+            }else{
+                check_opponent = false;
             }
         }
     }
-        piecetrack->x_cor = board.AssignxCoord(from_xcoord);
-        piecetrack->y_cor = board.AssignyCoord(from_ycoord);
 
+    piecetrack->x_cor = board.AssignxCoord(from_x);
+    piecetrack->y_cor = board.AssignyCoord(from_y);
+    capture = capture_state;
     return check_opponent;
 }
 
 bool MainWindow::Check_opponent(int from_x, int from_y, piecetracker* piecetrack)
 {
+    bool capture_state;
+    capture_state = capture;
     board board;
     QVectorIterator<piecetracker*> tracker(piece_tracker);
     while (tracker.hasNext())
@@ -490,12 +467,42 @@ bool MainWindow::Check_opponent(int from_x, int from_y, piecetracker* piecetrack
         }
     }
 
+    capture = true;
     if (!Validpiecemove(piecetrack->team,piecetrack->type,GetxPosition(from_x),GetyPosition(from_y),GetxPosition(king_xpos),GetyPosition(king_ypos)))
     {
+        capture = capture_state;
         return false;
     }else{
+        capture = capture_state;
         return true;
     }
+}
+
+bool MainWindow::Checkmate()
+{
+    QVectorIterator<piecetracker*> tracker(piece_tracker);
+    while (tracker.hasNext())
+    {
+        piecetracker *pt = tracker.next();
+        if (pt->team == turn)
+        {
+            for (int i = 1; i <= 8; ++i)
+            {
+                for (int j = 1; j <= 8; ++j)
+                {
+                    if ((Validmove(i, j)) && (Validpiecemove(pt->team,pt->type,GetxPosition(pt->x_cor), GetyPosition(pt->y_cor),i,j)))
+                    {
+                        if (!Check_yourself(pt->team,GetxPosition(pt->x_cor),GetyPosition(pt->y_cor),i,j,pt))
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
 }
 
 MainWindow::~MainWindow()

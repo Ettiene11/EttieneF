@@ -69,8 +69,9 @@ private slots:
     void Delete_possible_moves();
     int GetxPosition(int);
     int GetyPosition(int);
-    bool Check_yourself(char, int, int, piecetracker*);
+    bool Check_yourself(char, int, int, int, int, piecetracker*);
     bool Check_opponent(int, int, piecetracker*);
+    bool Checkmate();
 
 };
 
