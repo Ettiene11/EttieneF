@@ -25,6 +25,7 @@ typedef struct piecetracker
     int y_cor = 0;
     char team;
     char type;
+    int num_moves = 0;
 }
 piecetracker;
 
@@ -55,16 +56,16 @@ private:
     QVector<QLabel*> possible_moves;
 
     // Variables
-    int width = 800, height = 800, from_xcoord, from_ycoord, to_xcoord, to_ycoord, enemy_index, king_xpos, king_ypos;
-    int vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary;
-    int right_up_diagonal_boundary, right_down_diagonal_boundary, left_up_diagonal_boundary, left_down_diagonal_boundary;
+    int width = 800, height = 800, from_xcoord, from_ycoord, to_xcoord, to_ycoord, enemy_index, king_xpos, king_ypos,
+    vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary,
+    right_up_diagonal_boundary, right_down_diagonal_boundary, left_up_diagonal_boundary, left_down_diagonal_boundary;
     char turn = 'w', clicked_team;
-    bool clicked_on_piece = false, firstmove, capture = false, check = false, checkmate = false;
+    bool clicked_on_piece = false, capture = false, check = false, checkmate = false;
 
 private slots:
     void DefaultBoard();
     bool Clicked_on_Piece(int, int);
-    bool Validpiecemove(char, char, int, int, int, int);
+    bool Validpiecemove(char, char, int, int, int, int, int);
     bool Validmove(int, int);
     void Delete_possible_moves();
     int GetxPosition(int);
@@ -72,6 +73,7 @@ private slots:
     bool Check_yourself(char, int, int, int, int, piecetracker*);
     bool Check_opponent(int, int, piecetracker*);
     bool Checkmate();
+    bool En_passant(char, int, int, int, int);
 
 };
 

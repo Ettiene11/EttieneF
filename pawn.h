@@ -8,7 +8,7 @@ class Pawn: public MainWindow
 {
 public:
     Pawn();
-    bool ValidMove(char, bool, bool, int, int, int, int, int, int);
+    bool ValidMove(char, int, bool, int, int, int, int, int, int);
 
 private:
     int vertical_boundary;

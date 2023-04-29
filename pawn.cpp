@@ -7,7 +7,7 @@ Pawn::Pawn()
 
 }
 
-bool Pawn::ValidMove(char team, bool firstmove, bool capture, int from_x, int from_y, int to_x,
+bool Pawn::ValidMove(char team, int num_moves, bool capture, int from_x, int from_y, int to_x,
                      int to_y, int vertical_up_bound, int vertical_down_bound)
 {
     MainWindow mainw;
@@ -25,7 +25,7 @@ bool Pawn::ValidMove(char team, bool firstmove, bool capture, int from_x, int fr
     }else if ((abs(to_y-from_y)) >= vertical_boundary)
     {
         return false;
-    }else if ((firstmove == true) && ((abs(to_y-from_y)) >= 3))
+    }else if ((num_moves == 0) && ((abs(to_y-from_y)) >= 3))
     {
         return false;
     }else if (((to_y-from_y) > 0) && (team == 'b'))  //black team moves back (up)
@@ -37,7 +37,7 @@ bool Pawn::ValidMove(char team, bool firstmove, bool capture, int from_x, int fr
     }else if ((from_x != to_x) && (capture == false))  //diagonally without take
     {
         return false;
-    }else if ((firstmove == false) && ((abs(to_y-from_y)) >= 2))
+    }else if ((num_moves != 0) && ((abs(to_y-from_y)) >= 2))
     {
         return false;
     }else if ((from_x != to_x) && (from_y == to_y))

@@ -48,14 +48,14 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
                     break;
                 }
 
-                if (((t->y_cor == 600) && (t->team == 'w')) || ((t->y_cor == 100) && (t->team == 'b')))
-                {firstmove = true; }else{ firstmove = false; }
+//                if (((t->y_cor == 600) && (t->team == 'w')) || ((t->y_cor == 100) && (t->team == 'b')))
+//                {firstmove = true; }else{ firstmove = false; }
 
                 for (int i = 1; i <= 8; ++i)
                 {
                     for (int j = 1; j <= 8; ++j)
                     {
-                        if ((Validmove(i, j)) && (Validpiecemove(t->team,t->type,from_xcoord, from_ycoord,i,j)))
+                        if ((Validmove(i, j)) && (Validpiecemove(t->team,t->type,t->num_moves,from_xcoord, from_ycoord,i,j)))
                         {
                             if (!Check_yourself(t->team,from_xcoord, from_ycoord,i,j,t))
                             {
@@ -143,7 +143,7 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
 
         if ((board.AssignxCoord(x) == t->x_cor) && (board.AssignyCoord(y) == t->y_cor))
         {
-            if ((!(Validmove(to_xcoord, to_ycoord))) || (!(Validpiecemove(t->team,t->type,from_xcoord, from_ycoord,to_xcoord,to_ycoord))) || Check_yourself(t->team,from_xcoord, from_ycoord,to_xcoord,to_ycoord,t))
+            if ((!(Validmove(to_xcoord, to_ycoord))) || (!(Validpiecemove(t->team,t->type,t->num_moves,from_xcoord, from_ycoord,to_xcoord,to_ycoord))) || Check_yourself(t->team,from_xcoord, from_ycoord,to_xcoord,to_ycoord,t))
             {
                 cout << "not valid move" << endl;
             }else{
@@ -157,6 +157,7 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                     p->move(board.AssignxCoord(to_xcoord), board.AssignyCoord(to_ycoord));
                     t->x_cor = board.AssignxCoord(to_xcoord);
                     t->y_cor = board.AssignyCoord(to_ycoord);
+                    ++t->num_moves;
 
                     if (((t->type == 'p')&&(t->team == 'w')&&(t->y_cor == 0))             //see if pawn can be transformed
                             || ((t->type == 'p')&&(t->team == 'b')&&(t->y_cor == 700)))
@@ -212,12 +213,12 @@ bool MainWindow::Validmove(int x, int y)  //check if piece moved into open space
             }else{return false;}
         }
     }
-
     capture = false;
+
     return true;  //open space thus valid move
 }
 
-bool MainWindow::Validpiecemove(char team, char type, int from_x, int from_y, int x, int y) //check if specific piece has valid move based on its specific characteristical moves
+bool MainWindow::Validpiecemove(char team, char type, int num_moves, int from_x, int from_y, int x, int y) //check if specific piece has valid move based on its specific characteristical moves
 {
     Getboundaries(from_x, from_y);
     Pawn pawn;
@@ -228,7 +229,8 @@ bool MainWindow::Validpiecemove(char team, char type, int from_x, int from_y, in
     King king;
     switch (type) {
     case 'p' :
-        if (pawn.ValidMove(team, firstmove, capture, from_x, from_y, x, y, vertical_up_boundary, vertical_down_boundary)) {return true;} break;
+        if (En_passant(team,from_x, from_y, x, y)){return true;}
+        if (pawn.ValidMove(team, num_moves, capture, from_x, from_y, x, y, vertical_up_boundary, vertical_down_boundary)) {return true;} break;
     case 'n' :
         if (knight.ValidMove(team, from_x, from_y, x, y)) {return true;} break;
     case 'r' :
@@ -430,7 +432,7 @@ bool MainWindow::Check_yourself(char team, int from_x, int from_y, int to_x, int
         if (t->team != team)
         {
             capture = true;
-            if (Validpiecemove(t->team,t->type,GetxPosition(t->x_cor),GetyPosition(t->y_cor),GetxPosition(king_xpos),GetyPosition(king_ypos)))
+            if (Validpiecemove(t->team,t->type,t->num_moves,GetxPosition(t->x_cor),GetyPosition(t->y_cor),GetxPosition(king_xpos),GetyPosition(king_ypos)))
             {
                 check_opponent = true;
                 break;
@@ -468,7 +470,7 @@ bool MainWindow::Check_opponent(int from_x, int from_y, piecetracker* piecetrack
     }
 
     capture = true;
-    if (!Validpiecemove(piecetrack->team,piecetrack->type,GetxPosition(from_x),GetyPosition(from_y),GetxPosition(king_xpos),GetyPosition(king_ypos)))
+    if (!Validpiecemove(piecetrack->team,piecetrack->type,piecetrack->num_moves,GetxPosition(from_x),GetyPosition(from_y),GetxPosition(king_xpos),GetyPosition(king_ypos)))
     {
         capture = capture_state;
         return false;
@@ -490,7 +492,7 @@ bool MainWindow::Checkmate()
             {
                 for (int j = 1; j <= 8; ++j)
                 {
-                    if ((Validmove(i, j)) && (Validpiecemove(pt->team,pt->type,GetxPosition(pt->x_cor), GetyPosition(pt->y_cor),i,j)))
+                    if ((Validmove(i, j)) && (Validpiecemove(pt->team,pt->type,pt->num_moves,GetxPosition(pt->x_cor), GetyPosition(pt->y_cor),i,j)))
                     {
                         if (!Check_yourself(pt->team,GetxPosition(pt->x_cor),GetyPosition(pt->y_cor),i,j,pt))
                         {
@@ -503,6 +505,29 @@ bool MainWindow::Checkmate()
     }
 
     return true;
+}
+
+bool MainWindow::En_passant(char team, int from_x, int from_y, int to_x, int to_y)
+{
+    QVectorIterator<piecetracker*> tracker(piece_tracker);
+    while (tracker.hasNext())
+    {
+        piecetracker* t = tracker.next();
+        if ((((GetyPosition(t->y_cor) == 5) && (team == 'w')) || ((GetyPosition(t->y_cor) == 4) && (team == 'b'))) && (t->num_moves == 1))
+        {
+            if (((GetxPosition(t->x_cor) == to_x) && ((GetyPosition(t->y_cor)-to_y) == 1) && (team == 'b')) ||
+                    ((GetxPosition(t->x_cor) == to_x) && (to_y-(GetyPosition(t->y_cor)) == 1) && (team == 'w')))
+            {
+                if ((abs(from_x-GetxPosition(t->x_cor)) == 1) && (from_y == GetyPosition(t->y_cor)))
+                {
+                    capture = true;
+                    enemy_index = piece_tracker.indexOf(t);
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
 MainWindow::~MainWindow()
