@@ -55,7 +55,7 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
                 {
                     for (int j = 1; j <= 8; ++j)
                     {
-                        if ((Validmove(i, j)) && (Validpiecemove(t->team,t->type,t->num_moves,from_xcoord, from_ycoord,i,j)))
+                        if ((Validmove(t->type, i, j)) && (Validpiecemove(t->team,t->type,t->num_moves,from_xcoord, from_ycoord,i,j)))
                         {
                             if (!Check_yourself(t->team,from_xcoord, from_ycoord,i,j,t))
                             {
@@ -143,11 +143,11 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
 
         if ((board.AssignxCoord(x) == t->x_cor) && (board.AssignyCoord(y) == t->y_cor))
         {
-            if ((!(Validmove(to_xcoord, to_ycoord))) || (!(Validpiecemove(t->team,t->type,t->num_moves,from_xcoord, from_ycoord,to_xcoord,to_ycoord))) || Check_yourself(t->team,from_xcoord, from_ycoord,to_xcoord,to_ycoord,t))
+            if ((!(Validmove(t->type, to_xcoord, to_ycoord))) || (!(Validpiecemove(t->team,t->type,t->num_moves,from_xcoord, from_ycoord,to_xcoord,to_ycoord))) || Check_yourself(t->team,from_xcoord, from_ycoord,to_xcoord,to_ycoord,t))
             {
                 cout << "not valid move" << endl;
             }else{
-                    if (capture == true)
+                    if (capture)
                     {
                         piece_tracker.removeOne(piece_tracker[enemy_index]);
                         all_pieces[enemy_index]->hide();
@@ -158,6 +158,23 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                     t->x_cor = board.AssignxCoord(to_xcoord);
                     t->y_cor = board.AssignyCoord(to_ycoord);
                     ++t->num_moves;
+
+                    if (kingside_castling)
+                    {
+                        kingside_castling = false;
+                        castling_rook_lbl->move(board.AssignxCoord(to_xcoord-1), board.AssignyCoord(to_ycoord));  //move rook
+                        castling_rook_pt->x_cor = board.AssignxCoord(to_xcoord-1);
+                        castling_rook_pt->y_cor = board.AssignyCoord(to_ycoord);
+                        ++castling_rook_pt->num_moves;
+
+                    }else if (queenside_castling)
+                    {
+                        queenside_castling = false;
+                        castling_rook_lbl->move(board.AssignxCoord(to_xcoord+1), board.AssignyCoord(to_ycoord));  //move rook
+                        castling_rook_pt->x_cor = board.AssignxCoord(to_xcoord+1);
+                        castling_rook_pt->y_cor = board.AssignyCoord(to_ycoord);
+                        ++castling_rook_pt->num_moves;
+                    }
 
                     if (((t->type == 'p')&&(t->team == 'w')&&(t->y_cor == 0))             //see if pawn can be transformed
                             || ((t->type == 'p')&&(t->team == 'b')&&(t->y_cor == 700)))
@@ -194,7 +211,7 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
     return 0;
 }
 
-bool MainWindow::Validmove(int x, int y)  //check if piece moved into open space or onto enemy team's piece
+bool MainWindow::Validmove(char type, int x, int y)  //check if piece moved into open space or onto enemy team's piece
 {
     board board;
     QVectorIterator<piecetracker*> tracker(piece_tracker);
@@ -210,7 +227,13 @@ bool MainWindow::Validmove(int x, int y)  //check if piece moved into open space
                 capture = true;
                 enemy_index = piece_tracker.indexOf(t);
                 return true;
-            }else{return false;}
+            }else{
+                if ((PossibleCastling(t)) && (type == 'k'))
+                {
+                    capture = false;
+                    return true;
+                }else{return false;}
+            }
         }
     }
     capture = false;
@@ -240,6 +263,7 @@ bool MainWindow::Validpiecemove(char team, char type, int num_moves, int from_x,
     case 'q' :
         if (queen.ValidMove(team, from_x, from_y, x, y, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary,right_up_diagonal_boundary, left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary)) {return true;} break;
     case 'k' :
+        if (Castling(num_moves, horizontal_left_boundary, horizontal_right_boundary, x, y)) {return true;}
         if (king.ValidMove(team, check, from_x, from_y, x, y)) {return true;} break;
     }
     return false;
@@ -492,7 +516,7 @@ bool MainWindow::Checkmate()
             {
                 for (int j = 1; j <= 8; ++j)
                 {
-                    if ((Validmove(i, j)) && (Validpiecemove(pt->team,pt->type,pt->num_moves,GetxPosition(pt->x_cor), GetyPosition(pt->y_cor),i,j)))
+                    if ((Validmove(pt->type, i, j)) && (Validpiecemove(pt->team,pt->type,pt->num_moves,GetxPosition(pt->x_cor), GetyPosition(pt->y_cor),i,j)))
                     {
                         if (!Check_yourself(pt->team,GetxPosition(pt->x_cor),GetyPosition(pt->y_cor),i,j,pt))
                         {
@@ -522,6 +546,48 @@ bool MainWindow::En_passant(char team, int from_x, int from_y, int to_x, int to_
                 {
                     capture = true;
                     enemy_index = piece_tracker.indexOf(t);
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool MainWindow::PossibleCastling(piecetracker* pt)
+{
+    if ((pt->type == 'r') && (pt->num_moves == 0))
+    {
+        return true;
+    }
+    return false;
+}
+
+bool MainWindow::Castling(int num_moves, int left_bound, int right_bound, int to_x, int to_y)
+{
+    if (num_moves == 0)
+    {
+        QVectorIterator<QLabel*> piece(all_pieces);
+        QVectorIterator<piecetracker*> tracker(piece_tracker);
+        while (tracker.hasNext())
+        {
+            piecetracker* t = tracker.next();
+            QLabel* p = piece.next();
+            if ((GetxPosition(t->x_cor) == to_x) && (GetyPosition(t->y_cor) == to_y))
+            {
+                if ((to_x == 1) && (left_bound == 4) && (t->type == 'r') && (t->team == turn))
+                {
+                    to_xcoord = to_xcoord + 2;
+                    queenside_castling = true;
+                    castling_rook_pt = t;
+                    castling_rook_lbl = p;
+                    return true;
+                }else if ((to_x == 8) && (right_bound == 3) && (t->type == 'r') && (t->team == turn))
+                {
+                    to_xcoord = to_xcoord - 1;
+                    kingside_castling = true;
+                    castling_rook_pt = t;
+                    castling_rook_lbl = p;
                     return true;
                 }
             }
