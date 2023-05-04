@@ -12,6 +12,81 @@ using namespace std;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
 {
+    SetupGUI();
+}
+
+void MainWindow::SetupGUI()
+{
+    QVectorIterator<QPushButton*> buttons(GUI);
+    while (buttons.hasNext())
+    {
+        QPushButton* button = buttons.next();
+        button->deleteLater();
+        button->hide();
+    }
+
+    //    set background
+    setFixedSize(1000, 700);
+    QPixmap bkgnd("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess/chess_background.jpg");
+    bkgnd = bkgnd.scaled(1000,700, Qt::IgnoreAspectRatio);
+    QPalette palette;
+    palette.setBrush(QPalette::Background, bkgnd);
+    this->setPalette(palette);
+
+    //Main menu
+    QPushButton* new_button = new QPushButton(this);
+    new_button->show();
+    new_button->setText("Singleplayer");
+    new_button->setGeometry(0,0,100,75);
+    new_button->move(350, 300);
+    connect(new_button, SIGNAL(clicked()), this, SLOT(singleplayer_clicked()));
+    GUI.append(new_button);
+
+    QPushButton* new_button2 = new QPushButton(this);
+    new_button2->show();
+    new_button2->setText("Multiplayer");
+    new_button2->setGeometry(0,0,100,75);
+    new_button2->move(500, 300);
+    connect(new_button2, SIGNAL(clicked()), this, SLOT(multiplayer_clicked()));
+    GUI.append(new_button2);
+
+    name = new QLineEdit(this);
+    name->show();
+    name->setText("Player 1");
+    name->move(450,250);
+
+    lblname = new QLabel(this);
+    lblname->setText("Name: ");
+    lblname->move(400,250);
+    lblname->show();
+}
+
+void MainWindow::singleplayer_clicked()
+{
+
+}
+
+void MainWindow::multiplayer_clicked()
+{
+    name->deleteLater();
+    name->hide();
+    lblname->deleteLater();
+    lblname->hide();
+
+    playername = name->text();
+    NewGame();
+}
+
+void MainWindow::NewGame()
+{
+    QVectorIterator<QPushButton*> buttons(GUI);
+    while (buttons.hasNext())
+    {
+        QPushButton* button = buttons.next();
+        button->deleteLater();
+        button->hide();
+    }
+
     //    set background
     setFixedSize(width, height);
     QPixmap bkgnd("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess/board.png");
@@ -21,6 +96,51 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setPalette(palette);
 
     DefaultBoard();
+}
+
+void MainWindow::ResetGame()
+{
+    QVectorIterator<piecetracker*> tracker(piece_tracker);
+    QVectorIterator<QLabel*> piece(all_pieces);
+    while (tracker.hasNext())
+    {
+        piecetracker* pt = tracker.next();
+        QLabel* p = piece.next();
+
+        piece_tracker.removeOne(pt);
+        all_pieces.removeOne(p);
+        p->hide();
+    }
+}
+
+void MainWindow::EndGame()
+{
+    ResetGame();
+
+    //    set background
+    setFixedSize(1000, 700);
+    QPixmap bkgnd("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess/chess_background.jpg");
+    bkgnd = bkgnd.scaled(1000,700, Qt::IgnoreAspectRatio);
+    QPalette palette;
+    palette.setBrush(QPalette::Background, bkgnd);
+    this->setPalette(palette);
+
+    setFixedSize(1000,700);
+    QPushButton* new_button = new QPushButton(this);
+    new_button->show();
+    new_button->setText("Return to Main menu");
+    new_button->setGeometry(0,0,150,75);
+    new_button->move(300, 300);
+    connect(new_button, SIGNAL(clicked()), this, SLOT(SetupGUI()));
+    GUI.append(new_button);
+
+    QPushButton* new_button2 = new QPushButton(this);
+    new_button2->show();
+    new_button2->setText("Play again");
+    new_button2->setGeometry(0,0,150,75);
+    new_button2->move(550, 300);
+    connect(new_button2, SIGNAL(clicked()), this, SLOT(NewGame()));
+    GUI.append(new_button2);
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *e)
@@ -47,9 +167,6 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
                     click_counter = 0;
                     break;
                 }
-
-//                if (((t->y_cor == 600) && (t->team == 'w')) || ((t->y_cor == 100) && (t->team == 'b')))
-//                {firstmove = true; }else{ firstmove = false; }
 
                 for (int i = 1; i <= 8; ++i)
                 {
@@ -117,6 +234,8 @@ int MainWindow::GetyPosition(int ycoord)
 void MainWindow::Makepiece(QString text, char type, char team, int x, int y)
 {
     QLabel* new_piece = new QLabel(this);
+
+//    new_piece->setPixmap(image);
     new_piece->setText(text);
     new_piece->show();
     new_piece->move(x, y);
@@ -199,6 +318,8 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                         if (Checkmate())
                         {
                            cout << "Checkmate, " << t->team << " won!" << endl;
+                           EndGame();
+                           ResetGame();
                         }else{
                            cout << turn << "'s king is in check, no checkmate!" << endl;
                         }
@@ -286,6 +407,8 @@ void MainWindow::DefaultBoard()
     //pawns
     for (int i = 1; i<=8; ++i)
     {
+//        QPixmap image("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess/board.png");
+//        image.scaled(100,100);
         Makepiece("WP",'p','w',board.AssignxCoord(i),board.AssignyCoord(2));
         Makepiece("BP",'p','b',board.AssignxCoord(i),board.AssignyCoord(7));
     }
@@ -293,6 +416,7 @@ void MainWindow::DefaultBoard()
     //knights (symbol n)
     for (int i = 2; i<=7; i = i+5)
     {
+//        QPixmap image("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/test.jpg");
         Makepiece("WN",'n','w',board.AssignxCoord(i),board.AssignyCoord(1));
         Makepiece("BN",'n','b',board.AssignxCoord(i),board.AssignyCoord(8));
     }
@@ -300,6 +424,7 @@ void MainWindow::DefaultBoard()
     //rooks
     for (int i = 1; i<=8; i = i+7)
     {
+//        QPixmap image("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/test.jpg");
         Makepiece("WR",'r','w',board.AssignxCoord(i),board.AssignyCoord(1));
         Makepiece("BR",'r','b',board.AssignxCoord(i),board.AssignyCoord(8));
     }
@@ -307,11 +432,13 @@ void MainWindow::DefaultBoard()
     //bishops
     for (int i = 3; i<=6; i = i+3)
     {
+//        QPixmap image("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/test.jpg");
         Makepiece("WB",'b','w',board.AssignxCoord(i),board.AssignyCoord(1));
         Makepiece("BB",'b','b',board.AssignxCoord(i),board.AssignyCoord(8));
     }
 
     //queens
+//    QPixmap image("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/test.jpg");
     Makepiece("WQ",'q','w',board.AssignxCoord(4),board.AssignyCoord(1));
     Makepiece("BQ",'q','b',board.AssignxCoord(4),board.AssignyCoord(8));
 

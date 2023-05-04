@@ -15,6 +15,8 @@
 #include <QImage>
 #include <QPalette>
 #include <QDesktopWidget>
+#include <QPushButton>
+#include <QLineEdit>
 
 #include <vector>
 #include <random>
@@ -48,6 +50,8 @@ protected:
     //Vector lists
     QVector<QLabel*> all_pieces;
     QVector<piecetracker*> piece_tracker;
+    QVector<QPushButton*> GUI;
+    QLineEdit* name;
 
 private:
     // QObjects
@@ -63,8 +67,16 @@ private:
     bool clicked_on_piece = false, capture = false, check = false, checkmate = false, queenside_castling = false, kingside_castling = false;
     piecetracker* castling_rook_pt;
     QLabel* castling_rook_lbl;
+    QLabel* lblname;
+    QString playername;
 
 private slots:
+    void SetupGUI();
+    void NewGame();
+    void ResetGame();
+    void EndGame();
+    void singleplayer_clicked();
+    void multiplayer_clicked();
     void DefaultBoard();
     bool Clicked_on_Piece(int, int);
     bool Validpiecemove(char, char, int, int, int, int, int);
