@@ -21,7 +21,8 @@ void MainWindow::SetupGUI()
     while (buttons.hasNext())
     {
         QPushButton* button = buttons.next();
-        button->deleteLater();
+//        button->deleteLater();
+        GUI.removeOne(button);
         button->hide();
     }
 
@@ -177,7 +178,8 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
                             if (!Check_yourself(t->team,from_xcoord, from_ycoord,i,j,t))
                             {
                                 QLabel* new_move = new QLabel(this);
-                                new_move->setText("X");
+                                new_move->setPixmap(QPixmap("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/img/possible_move.png").scaled(100,100));
+                                new_move->setFixedSize(100, 100);
                                 new_move->show();
                                 new_move->move(board.AssignxCoord(i), board.AssignyCoord(j));
                                 possible_moves.append(new_move);
@@ -234,9 +236,8 @@ int MainWindow::GetyPosition(int ycoord)
 void MainWindow::Makepiece(QString text, char type, char team, int x, int y)
 {
     QLabel* new_piece = new QLabel(this);
-
-//    new_piece->setPixmap(image);
-    new_piece->setText(text);
+    new_piece->setPixmap(QPixmap("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/img/"+text).scaled(100,100));
+    new_piece->setFixedSize(100, 100);
     new_piece->show();
     new_piece->move(x, y);
     all_pieces.append(new_piece);
@@ -407,44 +408,38 @@ void MainWindow::DefaultBoard()
     //pawns
     for (int i = 1; i<=8; ++i)
     {
-//        QPixmap image("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess/board.png");
-//        image.scaled(100,100);
-        Makepiece("WP",'p','w',board.AssignxCoord(i),board.AssignyCoord(2));
-        Makepiece("BP",'p','b',board.AssignxCoord(i),board.AssignyCoord(7));
+        Makepiece("w_pawn.png",'p','w',board.AssignxCoord(i),board.AssignyCoord(2));
+        Makepiece("b_pawn.png",'p','b',board.AssignxCoord(i),board.AssignyCoord(7));
     }
 
     //knights (symbol n)
     for (int i = 2; i<=7; i = i+5)
     {
-//        QPixmap image("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/test.jpg");
-        Makepiece("WN",'n','w',board.AssignxCoord(i),board.AssignyCoord(1));
-        Makepiece("BN",'n','b',board.AssignxCoord(i),board.AssignyCoord(8));
+        Makepiece("w_knight.png",'n','w',board.AssignxCoord(i),board.AssignyCoord(1));
+        Makepiece("b_knight.png",'n','b',board.AssignxCoord(i),board.AssignyCoord(8));
     }
 
     //rooks
     for (int i = 1; i<=8; i = i+7)
     {
-//        QPixmap image("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/test.jpg");
-        Makepiece("WR",'r','w',board.AssignxCoord(i),board.AssignyCoord(1));
-        Makepiece("BR",'r','b',board.AssignxCoord(i),board.AssignyCoord(8));
+        Makepiece("w_rook.png",'r','w',board.AssignxCoord(i),board.AssignyCoord(1));
+        Makepiece("b_rook.png",'r','b',board.AssignxCoord(i),board.AssignyCoord(8));
     }
 
     //bishops
     for (int i = 3; i<=6; i = i+3)
     {
-//        QPixmap image("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/test.jpg");
-        Makepiece("WB",'b','w',board.AssignxCoord(i),board.AssignyCoord(1));
-        Makepiece("BB",'b','b',board.AssignxCoord(i),board.AssignyCoord(8));
+        Makepiece("w_bishop.png",'b','w',board.AssignxCoord(i),board.AssignyCoord(1));
+        Makepiece("b_bishop.png",'b','b',board.AssignxCoord(i),board.AssignyCoord(8));
     }
 
     //queens
-//    QPixmap image("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/test.jpg");
-    Makepiece("WQ",'q','w',board.AssignxCoord(4),board.AssignyCoord(1));
-    Makepiece("BQ",'q','b',board.AssignxCoord(4),board.AssignyCoord(8));
+    Makepiece("w_queen.png",'q','w',board.AssignxCoord(4),board.AssignyCoord(1));
+    Makepiece("b_queen.png",'q','b',board.AssignxCoord(4),board.AssignyCoord(8));
 
     //kings
-    Makepiece("WK",'k','w',board.AssignxCoord(5),board.AssignyCoord(1));
-    Makepiece("BK",'k','b',board.AssignxCoord(5),board.AssignyCoord(8));
+    Makepiece("w_king.png",'k','w',board.AssignxCoord(5),board.AssignyCoord(1));
+    Makepiece("b_king.png",'k','b',board.AssignxCoord(5),board.AssignyCoord(8));
 }
 
 void MainWindow::Getboundaries(int from_x, int from_y)
