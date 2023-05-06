@@ -21,14 +21,13 @@ void MainWindow::SetupGUI()
     while (buttons.hasNext())
     {
         QPushButton* button = buttons.next();
-//        button->deleteLater();
         GUI.removeOne(button);
         button->hide();
     }
 
     //    set background
     setFixedSize(1000, 700);
-    QPixmap bkgnd("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess/chess_background.jpg");
+    QPixmap bkgnd(":img/chess_background.jpg");
     bkgnd = bkgnd.scaled(1000,700, Qt::IgnoreAspectRatio);
     QPalette palette;
     palette.setBrush(QPalette::Background, bkgnd);
@@ -90,7 +89,7 @@ void MainWindow::NewGame()
 
     //    set background
     setFixedSize(width, height);
-    QPixmap bkgnd("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess/board.png");
+    QPixmap bkgnd(":img/board.png");
     bkgnd = bkgnd.scaled(width,height, Qt::IgnoreAspectRatio);
     QPalette palette;
     palette.setBrush(QPalette::Background, bkgnd);
@@ -120,7 +119,7 @@ void MainWindow::EndGame()
 
     //    set background
     setFixedSize(1000, 700);
-    QPixmap bkgnd("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess/chess_background.jpg");
+    QPixmap bkgnd(":img/chess_background.jpg");
     bkgnd = bkgnd.scaled(1000,700, Qt::IgnoreAspectRatio);
     QPalette palette;
     palette.setBrush(QPalette::Background, bkgnd);
@@ -178,7 +177,7 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
                             if (!Check_yourself(t->team,from_xcoord, from_ycoord,i,j,t))
                             {
                                 QLabel* new_move = new QLabel(this);
-                                new_move->setPixmap(QPixmap("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/img/possible_move.png").scaled(100,100));
+                                new_move->setPixmap(QPixmap(":img/possible_move.png").scaled(100,100));
                                 new_move->setFixedSize(100, 100);
                                 new_move->show();
                                 new_move->move(board.AssignxCoord(i), board.AssignyCoord(j));
@@ -236,7 +235,7 @@ int MainWindow::GetyPosition(int ycoord)
 void MainWindow::Makepiece(QString text, char type, char team, int x, int y)
 {
     QLabel* new_piece = new QLabel(this);
-    new_piece->setPixmap(QPixmap("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/img/"+text).scaled(100,100));
+    new_piece->setPixmap(QPixmap(":img/"+text).scaled(100,100));
     new_piece->setFixedSize(100, 100);
     new_piece->show();
     new_piece->move(x, y);
