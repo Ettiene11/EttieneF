@@ -550,7 +550,7 @@ bool MainWindow::Check_yourself(char team, int from_x, int from_y, int to_x, int
     bool check_opponent = false, capture_state;
     capture_state = capture;
 
-    piecetrack->x_cor = board.AssignxCoord(to_x);
+    piecetrack->x_cor = board.AssignxCoord(to_x);   //move temporarily
     piecetrack->y_cor = board.AssignyCoord(to_y);
 
     QVectorIterator<piecetracker*> tracker(piece_tracker);
@@ -573,16 +573,20 @@ bool MainWindow::Check_yourself(char team, int from_x, int from_y, int to_x, int
     while (tracker.hasNext())
     {
         piecetracker *t = tracker.next();
-
-        if (t->team != team)
+        if ((capture == true) && (t == piece_tracker[enemy_index]))
         {
-            capture = true;
-            if (Validpiecemove(t->team,t->type,t->num_moves,GetxPosition(t->x_cor),GetyPosition(t->y_cor),GetxPosition(king_xpos),GetyPosition(king_ypos)))
+            check_opponent = false;
+        }else{
+            if (t->team != team)
             {
-                check_opponent = true;
-                break;
-            }else{
-                check_opponent = false;
+    //            capture = true;
+                if (Validpiecemove(t->team,t->type,t->num_moves,GetxPosition(t->x_cor),GetyPosition(t->y_cor),GetxPosition(king_xpos),GetyPosition(king_ypos)))
+                {
+                    check_opponent = true;
+                    break;
+                }else{
+                    check_opponent = false;
+                }
             }
         }
     }
