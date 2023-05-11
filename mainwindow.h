@@ -17,6 +17,8 @@
 #include <QDesktopWidget>
 #include <QPushButton>
 #include <QLineEdit>
+#include "server.h"
+#include "client.h"
 
 #include <vector>
 #include <random>
@@ -40,6 +42,7 @@ public:
     ~MainWindow();
     void Makepiece(QString, char, char, int, int);
     void Getboundaries(int, int);
+    bool playing_game = false;
 
 protected:
     void mousePressEvent(QMouseEvent *event);
@@ -63,18 +66,34 @@ private:
     int width = 800, height = 800, from_xcoord, from_ycoord, to_xcoord, to_ycoord, enemy_index, king_xpos, king_ypos,
     vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary,
     right_up_diagonal_boundary, right_down_diagonal_boundary, left_up_diagonal_boundary, left_down_diagonal_boundary;
-    char turn = 'w', clicked_team;
-    bool clicked_on_piece = false, capture = false, check = false, checkmate = false, queenside_castling = false, kingside_castling = false;
+    char turn = 'w', clicked_team, team;
+    bool clicked_on_piece = false, capture = false, check = false, checkmate = false, queenside_castling = false, kingside_castling = false,
+    player_is_server = false, player_is_client = false;
     piecetracker* castling_rook_pt;
     QLabel* castling_rook_lbl;
     QLabel* lblname;
-    QString playername;
+    QString playername, opponentname, lblstatus;
+
+    //network variables
+    Server *server;
+    Client *client;
+    QString *input;
+    QString *output;
+    char networkrole;
 
 private slots:
     void SetupGUI();
     void NewGame();
     void ResetGame();
     void EndGame();
+    void NetworkGUI();
+
+    void makeClient();
+    void makeServer();
+    void clientSend();
+    void serverSend();
+    void receive(QByteArray);
+
     void singleplayer_clicked();
     void multiplayer_clicked();
     void DefaultBoard();

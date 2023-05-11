@@ -27,26 +27,32 @@ CONFIG += c++11
 SOURCES += \
         bishop.cpp \
         board.cpp \
+        client.cpp \
         king.cpp \
         knight.cpp \
         main.cpp \
         mainwindow.cpp \
         pawn.cpp \
         queen.cpp \
-        rook.cpp
+        rook.cpp \
+        server.cpp
 
 HEADERS += \
         bishop.h \
         board.h \
+        client.h \
         king.h \
         knight.h \
         mainwindow.h \
         pawn.h \
         queen.h \
-        rook.h
+        rook.h \
+        server.h
 
 FORMS += \
         mainwindow.ui
+
+QT += network
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

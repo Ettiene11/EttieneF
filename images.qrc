@@ -15,5 +15,6 @@
         <file>img/w_knight.png</file>
         <file>img/w_queen.png</file>
         <file>img/w_rook.png</file>
+        <file>img/frame.png</file>
     </qresource>
 </RCC>

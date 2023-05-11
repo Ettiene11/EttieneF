@@ -26,9 +26,9 @@ void MainWindow::SetupGUI()
     }
 
     //    set background
-    setFixedSize(1000, 700);
+    setFixedSize(1000, 800);
     QPixmap bkgnd(":img/chess_background.jpg");
-    bkgnd = bkgnd.scaled(1000,700, Qt::IgnoreAspectRatio);
+    bkgnd = bkgnd.scaled(1000,800, Qt::IgnoreAspectRatio);
     QPalette palette;
     palette.setBrush(QPalette::Background, bkgnd);
     this->setPalette(palette);
@@ -74,7 +74,103 @@ void MainWindow::multiplayer_clicked()
     lblname->hide();
 
     playername = name->text();
-    NewGame();
+//    NewGame();
+    NetworkGUI();
+}
+
+void MainWindow::NetworkGUI()
+{
+    server = nullptr;
+    client = nullptr;
+    input = nullptr;
+    output = nullptr;
+
+    setFixedSize(1000, 800);
+    QPixmap bkgnd(":img/chess_background.jpg");
+    bkgnd = bkgnd.scaled(1000,800, Qt::IgnoreAspectRatio);
+    QPalette palette;
+    palette.setBrush(QPalette::Background, bkgnd);
+    this->setPalette(palette);
+
+    //Main menu
+    QPushButton* new_button = new QPushButton(this);
+    new_button->show();
+    new_button->setText("Client");
+    new_button->setGeometry(0,0,100,75);
+    new_button->move(350, 300);
+    connect(new_button, SIGNAL(clicked()), this, SLOT(makeClient()));
+    GUI.append(new_button);
+
+    QPushButton* new_button2 = new QPushButton(this);
+    new_button2->show();
+    new_button2->setText("Server");
+    new_button2->setGeometry(0,0,100,75);
+    new_button2->move(500, 300);
+    connect(new_button2, SIGNAL(clicked()), this, SLOT(makeServer()));
+    GUI.append(new_button2);
+}
+
+void MainWindow::makeClient()
+{
+    networkrole = 'c';
+    client = new Client;
+    connect(client, SIGNAL(dataReceived(QByteArray)), this, SLOT(receive(QByteArray)));
+    if (!client->connectToHost("127.0.0.1"))
+    {
+        client->deleteLater();
+        return;
+    }
+
+    client->writeData(playername.toUtf8());
+    player_is_client = true;
+}
+
+void MainWindow::makeServer()
+{
+    networkrole = 's';
+    server = new Server;
+    connect(server, SIGNAL(dataReceived(QByteArray)), this, SLOT(receive(QByteArray)));
+
+    cout<<"Waiting for opponent"<<endl;
+    player_is_server = true;
+}
+
+void MainWindow::serverSend()
+{
+    QString s = QString::number(5);
+    char c = 'd';
+    QString message = c + s;
+    server->writeData(message.toUtf8());
+//    server->writeData(input->toPlainText().toUtf8());
+}
+
+void MainWindow::clientSend()
+{
+//    client->writeData(input->toPlainText().toUtf8());
+}
+
+void MainWindow::receive(QByteArray data)
+{
+    if ((!playing_game) && (player_is_server == true))
+    {
+        QString string = QString(data);
+        opponentname = string;
+        server->writeData(playername.toUtf8());
+        playing_game = true;
+        NewGame();
+    }else if ((!playing_game) && (player_is_client == true)){
+        QString string = QString(data);
+        opponentname = string;
+        playing_game = true;
+        NewGame();
+    }else{
+        //    if (output)
+        //        output->setText(output->text() + "\n" + data);
+
+        //    QString string = QString(data);
+        //    int num = string.at(1).digitValue();
+        //    std::cout << num << std::endl;
+    }
 }
 
 void MainWindow::NewGame()
@@ -88,12 +184,39 @@ void MainWindow::NewGame()
     }
 
     //    set background
-    setFixedSize(width, height);
-    QPixmap bkgnd(":img/board.png");
-    bkgnd = bkgnd.scaled(width,height, Qt::IgnoreAspectRatio);
-    QPalette palette;
-    palette.setBrush(QPalette::Background, bkgnd);
-    this->setPalette(palette);
+    QLabel* new_background = new QLabel(this);
+    new_background->setPixmap(QPixmap(":img/board.png").scaled(width,height));
+    new_background->setFixedSize(width+200, height);
+    new_background->show();
+
+    QLabel* new_frame = new QLabel(this);
+    new_frame->setPixmap(QPixmap(":img/frame.png").scaled(200,800));
+    new_frame->setFixedSize(200, 940);
+    new_frame->move(width,-70);
+    new_frame->show();
+
+    if (player_is_client)
+    {
+        team = 'w';
+    }else{
+        team = 'b';
+    }
+
+    QLabel* welc_message = new QLabel(this);
+    welc_message->setText("Welcome, " + playername + "!\nYou are playing " + opponentname
+                          + "\nYou are team " + team + ".\n\nGoodluck!!");
+    welc_message->move(855,115);
+    welc_message->setFixedWidth(999);
+    welc_message->setFixedHeight(100);
+    welc_message->show();
+
+    QLabel* status = new QLabel(this);
+    QString s = QString(turn);
+    lblstatus = s + "'s turn to play!";
+    status->setText("Game status: " + lblstatus);
+    status->setFixedWidth(999);
+    status->move(825,255);
+    status->show();
 
     DefaultBoard();
 }
@@ -145,75 +268,78 @@ void MainWindow::EndGame()
 
 void MainWindow::mousePressEvent(QMouseEvent *e)
 {
-    ++click_counter;
-
-    if (click_counter == 1)
+    if (playing_game)
     {
-        board board;
-        QVectorIterator<piecetracker*> tracker(piece_tracker);
+        ++click_counter;
 
-        from_xcoord = GetxPosition(e->x());
-        from_ycoord = GetyPosition(e->y());
-
-        while (tracker.hasNext())
+        if (click_counter == 1)
         {
-            piecetracker *t = tracker.next();
+            board board;
+            QVectorIterator<piecetracker*> tracker(piece_tracker);
 
-            if ((board.AssignxCoord(from_xcoord) == t->x_cor) && (board.AssignyCoord(from_ycoord) == t->y_cor))
+            from_xcoord = GetxPosition(e->x());
+            from_ycoord = GetyPosition(e->y());
+
+            while (tracker.hasNext())
             {
-                clicked_on_piece = true;
-                if(t->team != turn){
-                    cout << "not your turn" << endl;
-                    click_counter = 0;
-                    break;
-                }
+                piecetracker *t = tracker.next();
 
-                for (int i = 1; i <= 8; ++i)
+                if ((board.AssignxCoord(from_xcoord) == t->x_cor) && (board.AssignyCoord(from_ycoord) == t->y_cor))
                 {
-                    for (int j = 1; j <= 8; ++j)
+                    clicked_on_piece = true;
+                    if(t->team != turn){
+                        cout << "not your turn" << endl;
+                        click_counter = 0;
+                        break;
+                    }
+
+                    for (int i = 1; i <= 8; ++i)
                     {
-                        if ((Validmove(t->type, i, j)) && (Validpiecemove(t->team,t->type,t->num_moves,from_xcoord, from_ycoord,i,j)))
+                        for (int j = 1; j <= 8; ++j)
                         {
-                            if (!Check_yourself(t->team,from_xcoord, from_ycoord,i,j,t))
+                            if ((Validmove(t->type, i, j)) && (Validpiecemove(t->team,t->type,t->num_moves,from_xcoord, from_ycoord,i,j)))
                             {
-                                QLabel* new_move = new QLabel(this);
-                                new_move->setPixmap(QPixmap(":img/possible_move.png").scaled(100,100));
-                                new_move->setFixedSize(100, 100);
-                                new_move->show();
-                                new_move->move(board.AssignxCoord(i), board.AssignyCoord(j));
-                                possible_moves.append(new_move);
+                                if (!Check_yourself(t->team,from_xcoord, from_ycoord,i,j,t))
+                                {
+                                    QLabel* new_move = new QLabel(this);
+                                    new_move->setPixmap(QPixmap(":img/possible_move.png").scaled(100,100));
+                                    new_move->setFixedSize(100, 100);
+                                    new_move->show();
+                                    new_move->move(board.AssignxCoord(i), board.AssignyCoord(j));
+                                    possible_moves.append(new_move);
+                                }
                             }
                         }
                     }
-                }
 
-                if (possible_moves.isEmpty())
-                {
-                    cout << "this piece cannot move" << endl;
-                    click_counter = 0;
+                    if (possible_moves.isEmpty())
+                    {
+                        cout << "this piece cannot move" << endl;
+                        click_counter = 0;
+                    }
                 }
             }
+            if (!clicked_on_piece)
+            {
+                cout << "did not click on piece" << endl;
+                click_counter = 0;
+            }else{
+                clicked_on_piece = false;
+            }
         }
-        if (!clicked_on_piece)
+
+        if (click_counter == 2)
         {
-            cout << "did not click on piece" << endl;
+            to_xcoord = GetxPosition(e->x());
+            to_ycoord = GetyPosition(e->y());
             click_counter = 0;
-        }else{
-            clicked_on_piece = false;
+
+            if (!Clicked_on_Piece(from_xcoord,from_ycoord))
+            {
+                cout << "did not click on piece" << endl;
+            }
+
         }
-    }
-
-    if (click_counter == 2)
-    {
-        to_xcoord = GetxPosition(e->x());
-        to_ycoord = GetyPosition(e->y());
-        click_counter = 0;
-
-        if (!Clicked_on_Piece(from_xcoord,from_ycoord))
-        {
-            cout << "did not click on piece" << endl;
-        }
-
     }
 }
 
@@ -723,4 +849,9 @@ bool MainWindow::Castling(int num_moves, int left_bound, int right_bound, int to
 
 MainWindow::~MainWindow()
 {
+//    if (client)
+//        client->deleteLater();
+
+//    if (server)
+//        server->deleteLater();
 }
