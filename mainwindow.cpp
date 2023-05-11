@@ -164,6 +164,12 @@ void MainWindow::receive(QByteArray data)
         playing_game = true;
         NewGame();
     }else{
+        if (turn == 'w')
+        {
+            turn = 'b';
+        }else{
+            turn = 'w';
+        }
         //    if (output)
         //        output->setText(output->text() + "\n" + data);
 
@@ -171,6 +177,38 @@ void MainWindow::receive(QByteArray data)
         //    int num = string.at(1).digitValue();
         //    std::cout << num << std::endl;
     }
+}
+
+void MainWindow::arraytovector(QByteArray array)
+{
+    QString string;
+    string = QString(array);
+    int num_pieces;
+    num_pieces = sizeof(string)/5;
+
+    for (int i = 1; i <= num_pieces; ++i)
+    {
+        piecetracker* pt = new piecetracker;
+        for (int j = 1; j <= 5; ++j)
+        {
+            pt->team = string.at(1);
+
+        }
+        piece_tracker.append(pt);
+    }
+}
+
+QByteArray MainWindow::stringtoarray()
+{
+    QString string;
+    QVectorIterator<piecetracker*> tracker(piece_tracker);
+    while (tracker.hasNext())
+    {
+        piecetracker* t = tracker.next();
+        string = string + (t->team+t->type+QString::number(t->x_cor)+QString::number(t->y_cor)+QString::number(t->num_moves));  //eg. wp110
+        piece_tracker.removeOne(t);
+    }
+    return string.toUtf8();
 }
 
 void MainWindow::NewGame()
@@ -271,76 +309,82 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
     if (playing_game)
     {
         ++click_counter;
-
-        if (click_counter == 1)
+        if (turn != team)
         {
-            board board;
-            QVectorIterator<piecetracker*> tracker(piece_tracker);
-
-            from_xcoord = GetxPosition(e->x());
-            from_ycoord = GetyPosition(e->y());
-
-            while (tracker.hasNext())
+            cout << "not your turn" << endl;
+            click_counter = 0;
+        }else{
+            if (click_counter == 1)
             {
-                piecetracker *t = tracker.next();
+                board board;
+                QVectorIterator<piecetracker*> tracker(piece_tracker);
 
-                if ((board.AssignxCoord(from_xcoord) == t->x_cor) && (board.AssignyCoord(from_ycoord) == t->y_cor))
+                from_xcoord = GetxPosition(e->x());
+                from_ycoord = GetyPosition(e->y());
+
+                while (tracker.hasNext())
                 {
-                    clicked_on_piece = true;
-                    if(t->team != turn){
-                        cout << "not your turn" << endl;
-                        click_counter = 0;
-                        break;
-                    }
+                    piecetracker *t = tracker.next();
 
-                    for (int i = 1; i <= 8; ++i)
+                    if ((board.AssignxCoord(from_xcoord) == t->x_cor) && (board.AssignyCoord(from_ycoord) == t->y_cor))
                     {
-                        for (int j = 1; j <= 8; ++j)
+                        clicked_on_piece = true;
+                        if(t->team != turn){
+                            cout << "not your team" << endl;
+                            click_counter = 0;
+                            break;
+                        }
+
+                        for (int i = 1; i <= 8; ++i)
                         {
-                            if ((Validmove(t->type, i, j)) && (Validpiecemove(t->team,t->type,t->num_moves,from_xcoord, from_ycoord,i,j)))
+                            for (int j = 1; j <= 8; ++j)
                             {
-                                if (!Check_yourself(t->team,from_xcoord, from_ycoord,i,j,t))
+                                if ((Validmove(t->type, i, j)) && (Validpiecemove(t->team,t->type,t->num_moves,from_xcoord, from_ycoord,i,j)))
                                 {
-                                    QLabel* new_move = new QLabel(this);
-                                    new_move->setPixmap(QPixmap(":img/possible_move.png").scaled(100,100));
-                                    new_move->setFixedSize(100, 100);
-                                    new_move->show();
-                                    new_move->move(board.AssignxCoord(i), board.AssignyCoord(j));
-                                    possible_moves.append(new_move);
+                                    if (!Check_yourself(t->team,from_xcoord, from_ycoord,i,j,t))
+                                    {
+                                        QLabel* new_move = new QLabel(this);
+                                        new_move->setPixmap(QPixmap(":img/possible_move.png").scaled(100,100));
+                                        new_move->setFixedSize(100, 100);
+                                        new_move->show();
+                                        new_move->move(board.AssignxCoord(i), board.AssignyCoord(j));
+                                        possible_moves.append(new_move);
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    if (possible_moves.isEmpty())
-                    {
-                        cout << "this piece cannot move" << endl;
-                        click_counter = 0;
+                        if (possible_moves.isEmpty())
+                        {
+                            cout << "this piece cannot move" << endl;
+                            click_counter = 0;
+                        }
                     }
                 }
+                if (!clicked_on_piece)
+                {
+                    cout << "did not click on piece" << endl;
+                    click_counter = 0;
+                }else{
+                    clicked_on_piece = false;
+                }
             }
-            if (!clicked_on_piece)
+
+            if (click_counter == 2)
             {
-                cout << "did not click on piece" << endl;
+                to_xcoord = GetxPosition(e->x());
+                to_ycoord = GetyPosition(e->y());
                 click_counter = 0;
-            }else{
-                clicked_on_piece = false;
+
+                if (!Clicked_on_Piece(from_xcoord,from_ycoord))
+                {
+                    cout << "did not click on piece" << endl;
+                }
+
             }
         }
 
-        if (click_counter == 2)
-        {
-            to_xcoord = GetxPosition(e->x());
-            to_ycoord = GetyPosition(e->y());
-            click_counter = 0;
-
-            if (!Clicked_on_Piece(from_xcoord,from_ycoord))
-            {
-                cout << "did not click on piece" << endl;
-            }
-
-        }
-    }
+      }
 }
 
 int MainWindow::GetxPosition(int xcoord)

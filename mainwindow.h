@@ -109,6 +109,8 @@ private slots:
     bool En_passant(char, int, int, int, int);
     bool Castling(int, int, int, int, int);
     bool PossibleCastling(piecetracker*);
+    void arraytovector(QByteArray);
+    QByteArray stringtoarray();
 
 };
 
