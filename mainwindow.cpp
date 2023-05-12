@@ -224,7 +224,7 @@ void MainWindow::arraytovector(QByteArray array)
             }
         }
 
-        Makepiece(filename,pt->type,pt->team,pt->x_cor,pt->y_cor);
+        Makepiece(filename,pt->type,pt->team,pt->x_cor,pt->y_cor,pt->num_moves);
     }
 }
 
@@ -430,7 +430,7 @@ int MainWindow::GetyPosition(int ycoord)
     }
 }
 
-void MainWindow::Makepiece(QString text, char type, char team, int x, int y)
+void MainWindow::Makepiece(QString text, char type, char team, int x, int y, int moves)
 {
     QLabel* new_piece = new QLabel(this);
     new_piece->setPixmap(QPixmap(":img/"+text).scaled(100,100));
@@ -444,6 +444,7 @@ void MainWindow::Makepiece(QString text, char type, char team, int x, int y)
     new_piecetracker->type = type;
     new_piecetracker->x_cor = x;
     new_piecetracker->y_cor = y;
+    new_piecetracker->num_moves = moves;
     piece_tracker.append(new_piecetracker);
 }
 
@@ -615,38 +616,38 @@ void MainWindow::DefaultBoard()
     //pawns
     for (int i = 1; i<=8; ++i)
     {
-        Makepiece("w_pawn.png",'p','w',board.AssignxCoord(i),board.AssignyCoord(2));
-        Makepiece("b_pawn.png",'p','b',board.AssignxCoord(i),board.AssignyCoord(7));
+        Makepiece("w_pawn.png",'p','w',board.AssignxCoord(i),board.AssignyCoord(2),0);
+        Makepiece("b_pawn.png",'p','b',board.AssignxCoord(i),board.AssignyCoord(7),0);
     }
 
     //knights (symbol n)
     for (int i = 2; i<=7; i = i+5)
     {
-        Makepiece("w_knight.png",'n','w',board.AssignxCoord(i),board.AssignyCoord(1));
-        Makepiece("b_knight.png",'n','b',board.AssignxCoord(i),board.AssignyCoord(8));
+        Makepiece("w_knight.png",'n','w',board.AssignxCoord(i),board.AssignyCoord(1),0);
+        Makepiece("b_knight.png",'n','b',board.AssignxCoord(i),board.AssignyCoord(8),0);
     }
 
     //rooks
     for (int i = 1; i<=8; i = i+7)
     {
-        Makepiece("w_rook.png",'r','w',board.AssignxCoord(i),board.AssignyCoord(1));
-        Makepiece("b_rook.png",'r','b',board.AssignxCoord(i),board.AssignyCoord(8));
+        Makepiece("w_rook.png",'r','w',board.AssignxCoord(i),board.AssignyCoord(1),0);
+        Makepiece("b_rook.png",'r','b',board.AssignxCoord(i),board.AssignyCoord(8),0);
     }
 
     //bishops
     for (int i = 3; i<=6; i = i+3)
     {
-        Makepiece("w_bishop.png",'b','w',board.AssignxCoord(i),board.AssignyCoord(1));
-        Makepiece("b_bishop.png",'b','b',board.AssignxCoord(i),board.AssignyCoord(8));
+        Makepiece("w_bishop.png",'b','w',board.AssignxCoord(i),board.AssignyCoord(1),0);
+        Makepiece("b_bishop.png",'b','b',board.AssignxCoord(i),board.AssignyCoord(8),0);
     }
 
     //queens
-    Makepiece("w_queen.png",'q','w',board.AssignxCoord(4),board.AssignyCoord(1));
-    Makepiece("b_queen.png",'q','b',board.AssignxCoord(4),board.AssignyCoord(8));
+    Makepiece("w_queen.png",'q','w',board.AssignxCoord(4),board.AssignyCoord(1),0);
+    Makepiece("b_queen.png",'q','b',board.AssignxCoord(4),board.AssignyCoord(8),0);
 
     //kings
-    Makepiece("w_king.png",'k','w',board.AssignxCoord(5),board.AssignyCoord(1));
-    Makepiece("b_king.png",'k','b',board.AssignxCoord(5),board.AssignyCoord(8));
+    Makepiece("w_king.png",'k','w',board.AssignxCoord(5),board.AssignyCoord(1),0);
+    Makepiece("b_king.png",'k','b',board.AssignxCoord(5),board.AssignyCoord(8),0);
 }
 
 void MainWindow::Getboundaries(int from_x, int from_y)

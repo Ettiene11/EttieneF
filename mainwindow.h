@@ -41,7 +41,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void Makepiece(QString, char, char, int, int);
+    void Makepiece(QString, char, char, int, int, int);
     void Getboundaries(int, int);
     bool playing_game = false;
 
