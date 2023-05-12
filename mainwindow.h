@@ -17,6 +17,7 @@
 #include <QDesktopWidget>
 #include <QPushButton>
 #include <QLineEdit>
+#include <QChar>
 #include "server.h"
 #include "client.h"
 
@@ -71,15 +72,14 @@ private:
     player_is_server = false, player_is_client = false;
     piecetracker* castling_rook_pt;
     QLabel* castling_rook_lbl;
-    QLabel* lblname;
-    QString playername, opponentname, lblstatus;
+    QLabel* lblname, *status;
+    QString playername, opponentname;
 
     //network variables
     Server *server;
     Client *client;
     QString *input;
     QString *output;
-    char networkrole;
 
 private slots:
     void SetupGUI();

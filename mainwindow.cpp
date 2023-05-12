@@ -112,7 +112,6 @@ void MainWindow::NetworkGUI()
 
 void MainWindow::makeClient()
 {
-    networkrole = 'c';
     client = new Client;
     connect(client, SIGNAL(dataReceived(QByteArray)), this, SLOT(receive(QByteArray)));
     if (!client->connectToHost("127.0.0.1"))
@@ -127,7 +126,6 @@ void MainWindow::makeClient()
 
 void MainWindow::makeServer()
 {
-    networkrole = 's';
     server = new Server;
     connect(server, SIGNAL(dataReceived(QByteArray)), this, SLOT(receive(QByteArray)));
 
@@ -137,76 +135,107 @@ void MainWindow::makeServer()
 
 void MainWindow::serverSend()
 {
-    QString s = QString::number(5);
-    char c = 'd';
-    QString message = c + s;
-    server->writeData(message.toUtf8());
-//    server->writeData(input->toPlainText().toUtf8());
+    server->writeData(stringtoarray());
 }
 
 void MainWindow::clientSend()
 {
-//    client->writeData(input->toPlainText().toUtf8());
+    client->writeData(stringtoarray());
 }
 
 void MainWindow::receive(QByteArray data)
 {
-    if ((!playing_game) && (player_is_server == true))
+    if (!playing_game)
     {
-        QString string = QString(data);
-        opponentname = string;
-        server->writeData(playername.toUtf8());
-        playing_game = true;
-        NewGame();
-    }else if ((!playing_game) && (player_is_client == true)){
-        QString string = QString(data);
-        opponentname = string;
-        playing_game = true;
-        NewGame();
+        if (player_is_server == true)
+        {
+            QString string = QString(data);
+            opponentname = string;
+            server->writeData(playername.toUtf8());
+            playing_game = true;
+            NewGame();
+        }else{
+            QString string = QString(data);
+            opponentname = string;
+            playing_game = true;
+            NewGame();
+        }
     }else{
+        arraytovector(data);
         if (turn == 'w')
         {
             turn = 'b';
         }else{
             turn = 'w';
         }
-        //    if (output)
-        //        output->setText(output->text() + "\n" + data);
-
-        //    QString string = QString(data);
-        //    int num = string.at(1).digitValue();
-        //    std::cout << num << std::endl;
+        QString s = QString(turn);
+        status->setText("Game status: " + s + "'s turn to play!");
     }
 }
 
 void MainWindow::arraytovector(QByteArray array)
 {
-    QString string;
+    board board;
+    QString string, filename;
+    string = "";
     string = QString(array);
-    int num_pieces;
-    num_pieces = sizeof(string)/5;
+    int num_pieces, h;
+    h = string.size();
+    num_pieces = h/5;
 
-    for (int i = 1; i <= num_pieces; ++i)
+    QVectorIterator<QLabel*> pieces(all_pieces);
+    QVectorIterator<piecetracker*> tracker(piece_tracker);
+    while (tracker.hasNext())
+    {
+        QLabel* p = pieces.next();
+        piecetracker* t = tracker.next();
+        p->hide();
+        all_pieces.removeOne(p);
+        piece_tracker.removeOne(t);
+    }
+
+    for (int i = 0; i < num_pieces; ++i)
     {
         piecetracker* pt = new piecetracker;
-        for (int j = 1; j <= 5; ++j)
-        {
-            pt->team = string.at(1);
+        pt->team = string[(i*5)].toLatin1();
+        pt->type = string[(i*5)+1].toLatin1();
+        pt->x_cor = board.AssignxCoord(string[(i*5)+2].digitValue());
+        pt->y_cor = board.AssignyCoord(string[(i*5)+3].digitValue());
+        pt->num_moves = string[(i*5)+4].digitValue();
 
+        if (pt->team == 'w')
+        {
+            switch (pt->type){
+            case 'p' :{filename = "w_pawn.png";break;}
+            case 'r' :{filename = "w_rook.png";break;}
+            case 'n' :{filename = "w_knight.png";break;}
+            case 'b' :{filename = "w_bishop.png";break;}
+            case 'q' :{filename = "w_queen.png";break;}
+            case 'k' :{filename = "w_king.png";break;}
+            }
+        }else{
+            switch (pt->type){
+            case 'p' :{filename = "b_pawn.png";break;}
+            case 'r' :{filename = "b_rook.png";break;}
+            case 'n' :{filename = "b_knight.png";break;}
+            case 'b' :{filename = "b_bishop.png";break;}
+            case 'q' :{filename = "b_queen.png";break;}
+            case 'k' :{filename = "b_king.png";break;}
+            }
         }
-        piece_tracker.append(pt);
+
+        Makepiece(filename,pt->type,pt->team,pt->x_cor,pt->y_cor);
     }
 }
 
 QByteArray MainWindow::stringtoarray()
 {
-    QString string;
+    QString string = "";
     QVectorIterator<piecetracker*> tracker(piece_tracker);
     while (tracker.hasNext())
     {
         piecetracker* t = tracker.next();
-        string = string + (t->team+t->type+QString::number(t->x_cor)+QString::number(t->y_cor)+QString::number(t->num_moves));  //eg. wp110
-        piece_tracker.removeOne(t);
+        string = string + t->team+t->type+QString::number(GetxPosition(t->x_cor))+QString::number(GetyPosition(t->y_cor))+QString::number(t->num_moves);  //eg. wp110
     }
     return string.toUtf8();
 }
@@ -248,10 +277,9 @@ void MainWindow::NewGame()
     welc_message->setFixedHeight(100);
     welc_message->show();
 
-    QLabel* status = new QLabel(this);
     QString s = QString(turn);
-    lblstatus = s + "'s turn to play!";
-    status->setText("Game status: " + lblstatus);
+    status = new QLabel(this);
+    status->setText("Game status: " + s + "'s turn to play!");
     status->setFixedWidth(999);
     status->move(825,255);
     status->show();
@@ -446,7 +474,8 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                     p->move(board.AssignxCoord(to_xcoord), board.AssignyCoord(to_ycoord));
                     t->x_cor = board.AssignxCoord(to_xcoord);
                     t->y_cor = board.AssignyCoord(to_ycoord);
-                    ++t->num_moves;
+                    if (t->num_moves<5)   //we are only interested in moves 0-2, important that it stays 1 char for transfer
+                    {++t->num_moves;}
 
                     if (kingside_castling)
                     {
@@ -493,6 +522,15 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                         }else{
                            cout << turn << "'s king is in check, no checkmate!" << endl;
                         }
+                    }
+
+                    QString s = QString(turn);
+                    status->setText("Game status: " + s + "'s turn to play!");
+                    if (player_is_client)
+                    {
+                        clientSend();
+                    }else{
+                        serverSend();
                     }
                 }
             Delete_possible_moves();
