@@ -69,11 +69,14 @@ private:
     right_up_diagonal_boundary, right_down_diagonal_boundary, left_up_diagonal_boundary, left_down_diagonal_boundary;
     char turn = 'w', clicked_team, team;
     bool clicked_on_piece = false, capture = false, check = false, checkmate = false, queenside_castling = false, kingside_castling = false,
-    player_is_server = false, player_is_client = false;
+    player_is_server = false, player_is_client = false, multiplayer = false, singleplayer = false;
     piecetracker* castling_rook_pt;
     QLabel* castling_rook_lbl;
-    QLabel* lblname, *status;
+
+    //GUI
+    QLabel* lblname, *status, *menustatus, *background, *new_frame, *welc_message;
     QString playername, opponentname;
+    QPushButton* btnyes, *btnno, *btnreturntomain, *btnplayagain;
 
     //network variables
     Server *server;
@@ -90,8 +93,8 @@ private slots:
 
     void makeClient();
     void makeServer();
-    void clientSend();
-    void serverSend();
+    void clientSend(QByteArray);
+    void serverSend(QByteArray);
     void receive(QByteArray);
 
     void singleplayer_clicked();
@@ -111,6 +114,9 @@ private slots:
     bool PossibleCastling(piecetracker*);
     void arraytovector(QByteArray);
     QByteArray stringtoarray();
+    void Sendgamestatus(QString);
+    void Askopponent(QString);
+    void Responsefromopponent(bool, QString);
 
 };
 
