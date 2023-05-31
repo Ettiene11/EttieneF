@@ -74,7 +74,7 @@ private:
     QLabel* castling_rook_lbl;
 
     //GUI
-    QLabel* lblname, *status, *menustatus, *background, *new_frame, *welc_message;
+    QLabel* lblname, *status, *menustatus, *gamestatus, *background, *new_frame, *welc_message;
     QString playername, opponentname;
     QPushButton* btnyes, *btnno, *btnreturntomain, *btnplayagain;
 

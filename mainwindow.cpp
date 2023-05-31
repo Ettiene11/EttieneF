@@ -25,7 +25,7 @@ void MainWindow::SetupGUI()
         if (player_is_client)
         {
             client->deleteLater();
-        }else{
+        }else if (player_is_server){
             QString str = "serverleft";
             serverSend(str.toUtf8());
         }
@@ -79,6 +79,7 @@ void MainWindow::SetupGUI()
     lblname->show();
 
     menustatus = new QLabel(this);
+    menustatus->setGeometry(0,0,200,50);
 }
 
 void MainWindow::singleplayer_clicked()
@@ -127,6 +128,14 @@ void MainWindow::NetworkGUI()
     new_button2->move(500, 300);
     connect(new_button2, SIGNAL(clicked()), this, SLOT(makeServer()));
     GUI.append(new_button2);
+
+    QPushButton* new_button3 = new QPushButton(this);
+    new_button3->show();
+    new_button3->setText("Back to main menu");
+    new_button3->setGeometry(0,0,150,30);
+    new_button3->move(1, 1);
+    connect(new_button3, SIGNAL(clicked()), this, SLOT(SetupGUI()));
+    GUI.append(new_button3);
 }
 
 void MainWindow::makeClient()
@@ -148,8 +157,10 @@ void MainWindow::makeServer()
     server = new Server;
     connect(server, SIGNAL(dataReceived(QByteArray)), this, SLOT(receive(QByteArray)));
 
-    menustatus->setText("Waiting for opponent");
+    menustatus->setText("Waiting for opponent...");
+    menustatus->setGeometry(0,0,4000,50);
     menustatus->move(400,200);
+    menustatus->show();
     player_is_server = true;
 }
 
@@ -257,22 +268,22 @@ void MainWindow::Askopponent()
     {
         playing_game = false;
         status->setText(opponentname + " wants to draw, do you accept?");
-        btnyes->move(810,270);
+        btnyes->move(835,300);
         btnyes->show();
         connect(btnyes, SIGNAL(clicked()), this, SLOT(ansyes()));
 
-        btnno->move(870,270);
+        btnno->move(895,300);
         btnno->show();
         connect(btnno, SIGNAL(clicked()), this, SLOT(ansno()));
     }
     if (question == "playagain")
     {
         menustatus->setText(opponentname + " wants to play again, do you accept?");
-        btnyes->move(400,270);
+        btnyes->move(445,250);
         btnyes->show();
         connect(btnyes, SIGNAL(clicked()), this, SLOT(ansyes()));
 
-        btnno->move(460,270);
+        btnno->move(505,250);
         btnno->show();
         connect(btnno, SIGNAL(clicked()), this, SLOT(ansno()));
     }
@@ -287,6 +298,7 @@ void MainWindow::ansyes()
         btnyes->deleteLater();
         btnno->deleteLater();
         EndGame();
+        menustatus->setText("Close one! It's a draw.");
         if (player_is_client)
         {
             clientSend("yesdraw");
@@ -427,7 +439,7 @@ void MainWindow::NewGame()
     welc_message->show();
 
     menustatus->hide();
-    menustatus->deleteLater();
+//    menustatus->deleteLater();
 
     QString s = QString(turn);
     status = new QLabel(this);
@@ -436,6 +448,11 @@ void MainWindow::NewGame()
     status->move(815,255);
     status->show();
 
+    gamestatus = new QLabel(this);
+    gamestatus->setGeometry(0,0,200,50);
+    gamestatus->move(825,300);
+    gamestatus->show();
+
     QString title;
     if (multiplayer)
     {
@@ -443,7 +460,7 @@ void MainWindow::NewGame()
         btnForfeit->show();
         btnForfeit->setText("Forfeit");
         btnForfeit->setGeometry(0,0,100,75);
-        btnForfeit->move(825, 500);
+        btnForfeit->move(845, 500);
         connect(btnForfeit, SIGNAL(clicked()), this, SLOT(Forfeit()));//"forfeit"
         GUI.append(btnForfeit);
 
@@ -451,7 +468,7 @@ void MainWindow::NewGame()
         btnDraw->show();
         btnDraw->setText("Draw");
         btnDraw->setGeometry(0,0,100,75);
-        btnDraw->move(825, 600);
+        btnDraw->move(845, 600);
         connect(btnDraw, SIGNAL(clicked()), this, SLOT(Draw()));
         GUI.append(btnDraw);
     }else if (singleplayer)
@@ -460,7 +477,7 @@ void MainWindow::NewGame()
         btnReset->show();
         btnReset->setText("Reset");
         btnReset->setGeometry(0,0,100,75);
-        btnReset->move(825, 500);
+        btnReset->move(845, 500);
         connect(btnReset, SIGNAL(clicked()), this, SLOT(ResetGame()));
         GUI.append(btnReset);
 
@@ -468,7 +485,7 @@ void MainWindow::NewGame()
         btnQuit->show();
         btnQuit->setText("Quit");
         btnQuit->setGeometry(0,0,100,75);
-        btnQuit->move(825, 600);
+        btnQuit->move(845, 600);
         connect(btnQuit, SIGNAL(clicked()), this, SLOT(Endgame()));
         GUI.append(btnQuit);
     }
@@ -496,6 +513,8 @@ void MainWindow::ResetGame()
     welc_message->deleteLater();
     new_frame->hide();
     new_frame->deleteLater();
+    gamestatus->hide();
+    gamestatus->deleteLater();
     turn = 'w';
 }
 
@@ -535,9 +554,9 @@ void MainWindow::EndGame()
     connect(btnplayagain, SIGNAL(clicked()), this, SLOT(Playagain()));
     GUI.append(btnplayagain);
 
-    menustatus = new QLabel(this);
-    menustatus->setGeometry(0,0,200,50);
-    menustatus->move(450, 200);
+//    menustatus = new QLabel(this);
+    menustatus->setGeometry(0,0,4000,50);
+    menustatus->move(430, 200);
     menustatus->show();
     if (((serv_won) && (player_is_server)) || ((client_won) && (player_is_client)))
     {
@@ -565,6 +584,7 @@ void MainWindow::Forfeit()
         clientSend(str.toUtf8());
     }else{serverSend(str.toUtf8());}
     EndGame();
+    menustatus->setText("You forfeited the game.");
 }
 
 void MainWindow::Draw()
@@ -585,7 +605,7 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
         ++click_counter;
         if (turn != team)
         {
-            cout << "not your turn" << endl;
+            gamestatus->setText("not your turn");
             click_counter = 0;
         }else{
             if (click_counter == 1)
@@ -604,7 +624,7 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
                     {
                         clicked_on_piece = true;
                         if(t->team != turn){
-                            cout << "not your team" << endl;
+                            gamestatus->setText("not your team");
                             click_counter = 0;
                             break;
                         }
@@ -630,14 +650,14 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
 
                         if (possible_moves.isEmpty())
                         {
-                            cout << "this piece cannot move" << endl;
+                            gamestatus->setText("This piece cannot move");
                             click_counter = 0;
                         }
                     }
                 }
                 if (!clicked_on_piece)
                 {
-                    cout << "did not click on piece" << endl;
+                    gamestatus->setText("You did not click on piece");
                     click_counter = 0;
                 }else{
                     clicked_on_piece = false;
@@ -652,7 +672,7 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
 
                 if (!Clicked_on_Piece(from_xcoord,from_ycoord))
                 {
-                    cout << "did not click on piece" << endl;
+                    gamestatus->setText("You did not click on piece");
                 }
 
             }
@@ -709,7 +729,7 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
         {
             if ((!(Validmove(t->type, to_xcoord, to_ycoord))) || (!(Validpiecemove(t->team,t->type,t->num_moves,from_xcoord, from_ycoord,to_xcoord,to_ycoord))) || Check_yourself(t->team,from_xcoord, from_ycoord,to_xcoord,to_ycoord,t))
             {
-                cout << "not valid move" << endl;
+                gamestatus->setText("not valid move");
             }else{
                     if (capture)
                     {
@@ -760,10 +780,10 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
 
                     if (Check_opponent(t->x_cor, t->y_cor, t))
                     {
-                        cout << turn << "'s king is in check, checking for possible checkmate..." << endl;
+                        gamestatus->setText(QString(turn) + "'s king is in check.\nChecking for possible checkmate...");
                         if (Checkmate())
                         {
-                           cout << "Checkmate, " << t->team << " won!" << endl;
+                            gamestatus->setText("Checkmate, " + QString(t->team) + " won!");
                            if (player_is_client)
                            {
                                client_won = true;
@@ -771,7 +791,7 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                            }else{serverSend("endgame"); serv_won = true;}
                            EndGame();
                         }else{
-                           cout << turn << "'s king is in check, no checkmate!" << endl;
+                           gamestatus->setText(QString(turn) + "'s king is in check, no checkmate!");
                         }
                     }
 
