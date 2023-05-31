@@ -17,10 +17,10 @@ signals:
 
 public slots:
     bool writeData(QByteArray data);
+    void disconnected();
 
 private slots:
     void newConnection();
-    void disconnected();
     void readyRead();
 
 

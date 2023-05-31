@@ -6,6 +6,8 @@
 #include <bishop.h>
 #include <queen.h>
 #include <king.h>
+#include <client.h>
+#include <server.h>
 
 using namespace std;
 
@@ -17,20 +19,27 @@ MainWindow::MainWindow(QWidget *parent) :
 
 void MainWindow::SetupGUI()
 {
+    if (multiplayer == true)
+    {
+        menustatus->hide();
+        if (player_is_client)
+        {
+            client->deleteLater();
+        }else{
+            QString str = "serverleft";
+            serverSend(str.toUtf8());
+        }
+    }
     singleplayer = false;
     multiplayer = false;
-//    if (client)
-//        client->deleteLater();
 
-//    if (server)
-//        server->deleteLater();
-//    QVectorIterator<QPushButton*> buttons(GUI);
-//    while (buttons.hasNext())
-//    {
-//        QPushButton* button = buttons.next();
-//        GUI.removeOne(button);
-//        button->hide();
-//    }
+    QVectorIterator<QPushButton*> buttons(GUI);
+    while (buttons.hasNext())
+    {
+        QPushButton* button = buttons.next();
+        GUI.removeOne(button);
+        button->hide();
+    }
 
     //    set background
     setFixedSize(1000, 800);
@@ -38,11 +47,6 @@ void MainWindow::SetupGUI()
     background->setPixmap(QPixmap(":img/chess_background.jpg").scaled(1000,800));
     background->move(0,0);
     background->setFixedSize(1000,800);
-//    QPixmap bkgnd(":img/chess_background.jpg");
-//    bkgnd = bkgnd.scaled(1000,800, Qt::IgnoreAspectRatio);
-//    QPalette palette;
-//    palette.setBrush(QPalette::Background, bkgnd);
-//    this->setPalette(palette);
 
     //Main menu
     QPushButton* new_button = new QPushButton(this);
@@ -73,6 +77,8 @@ void MainWindow::SetupGUI()
     lblname->setText("Name: ");
     lblname->move(400,250);
     lblname->show();
+
+    menustatus = new QLabel(this);
 }
 
 void MainWindow::singleplayer_clicked()
@@ -142,7 +148,8 @@ void MainWindow::makeServer()
     server = new Server;
     connect(server, SIGNAL(dataReceived(QByteArray)), this, SLOT(receive(QByteArray)));
 
-    cout<<"Waiting for opponent"<<endl;
+    menustatus->setText("Waiting for opponent");
+    menustatus->move(400,200);
     player_is_server = true;
 }
 
@@ -159,7 +166,8 @@ void MainWindow::clientSend(QByteArray data)
 void MainWindow::receive(QByteArray data)
 {
     if ((!playing_game) && (!((QString(data) == "endgame") || (QString(data) == "forfeit") || (QString(data) == "draw") || (QString(data) == "nodraw")
-                              || (QString(data) == "yesdraw") || (QString(data) == "playagain") || (QString(data) == "playagainyes") || (QString(data) == "playagainno"))))
+                              || (QString(data) == "yesdraw") || (QString(data) == "playagain") || (QString(data) == "playagainyes") || (QString(data) == "playagainno")
+                              || (QString(data) == "serverleft"))))
     {
         if (player_is_server == true)
         {
@@ -176,7 +184,8 @@ void MainWindow::receive(QByteArray data)
         }
     }else{
         if ((QString(data) == "endgame") || (QString(data) == "forfeit") || (QString(data) == "draw") || (QString(data) == "nodraw")
-                || (QString(data) == "yesdraw") || (QString(data) == "playagain") || (QString(data) == "playagainyes") || (QString(data) == "playagainno"))
+                || (QString(data) == "yesdraw") || (QString(data) == "playagain") || (QString(data) == "playagainyes") || (QString(data) == "playagainno")
+                || (QString(data) == "serverleft"))
         {
            if (QString(data) == "endgame")
            {
@@ -184,6 +193,7 @@ void MainWindow::receive(QByteArray data)
            }else if (QString(data) == "forfeit")
            {
                 EndGame();
+                menustatus->setText(opponentname + " has forfeited! You won!");          //show leaderboard and update score
            }else if (QString(data) == "draw")
            {
                 question = "draw";
@@ -195,6 +205,7 @@ void MainWindow::receive(QByteArray data)
            }else if (QString(data) == "yesdraw")
            {
                EndGame();
+               menustatus->setText("Close one! It's a draw.");
            }else if ((QString(data) == "playagain"))
            {
                ans = true;
@@ -204,12 +215,18 @@ void MainWindow::receive(QByteArray data)
            {
                 NewGame();
                 status->setText(opponentname + " joined for another game.");
-           }
-           else if ((QString(data) == "playagainno"))
+           }else if ((QString(data) == "playagainno"))
           {
                SetupGUI();
                menustatus->setText(opponentname + " returned to main menu.");
-          }
+          }else if ((QString(data) == "serverleft"))
+           {
+                SetupGUI();
+                menustatus->setText("Server has left the lobby.");
+                server->deleteLater();
+                server->disconnected();                              //bug
+                client->deleteLater();
+           }
         }else{
             arraytovector(data);
             if (turn == 'w')
@@ -229,10 +246,12 @@ void MainWindow::Askopponent()
     btnyes = new QPushButton(this);
     btnyes->setText("Yes");
     btnyes->setFixedSize(50,50);
+    GUI.append(btnyes);
 
     btnno = new QPushButton(this);
     btnno->setText("No");
     btnno->setFixedSize(50,50);
+    GUI.append(btnno);
 
     if (question == "draw")
     {
@@ -372,13 +391,14 @@ QByteArray MainWindow::stringtoarray()
 
 void MainWindow::NewGame()
 {
-//    QVectorIterator<QPushButton*> buttons(GUI);
-//    while (buttons.hasNext())
-//    {
-//        QPushButton* button = buttons.next();
-//        button->hide();
-//        button->deleteLater();
-//    }
+    QVectorIterator<QPushButton*> buttons(GUI);
+    while (buttons.hasNext())
+    {
+        QPushButton* button = buttons.next();
+        GUI.removeOne(button);
+        button->hide();
+    }
+
     playing_game = true;
     //    set background
     background->setPixmap(QPixmap(":img/board.png").scaled(width,height));
@@ -405,6 +425,9 @@ void MainWindow::NewGame()
     welc_message->setFixedWidth(999);
     welc_message->setFixedHeight(100);
     welc_message->show();
+
+    menustatus->hide();
+    menustatus->deleteLater();
 
     QString s = QString(turn);
     status = new QLabel(this);
@@ -481,32 +504,28 @@ void MainWindow::EndGame()
     playing_game = false;
     ResetGame();
 
-//    QVectorIterator<QPushButton*> buttons(GUI);
-//    while (buttons.hasNext())
-//    {
-//        QPushButton* button = buttons.next();
-//        button->hide();
-//        button->deleteLater();
-//    }
+    QVectorIterator<QPushButton*> buttons(GUI);
+    while (buttons.hasNext())
+    {
+        QPushButton* button = buttons.next();
+        GUI.removeOne(button);
+        button->hide();
+    }
 
+//    menustatus->hide();
     //    set background
     setFixedSize(1000, 800);
     background->setPixmap(QPixmap(":img/chess_background.jpg").scaled(1000,800));
     background->move(0,0);
     background->setFixedSize(1000,800);
-//    QPixmap bkgnd(":img/chess_background.jpg");
-//    bkgnd = bkgnd.scaled(1000,700, Qt::IgnoreAspectRatio);
-//    QPalette palette;
-//    palette.setBrush(QPalette::Background, bkgnd);
-//    this->setPalette(palette);
 
     btnreturntomain = new QPushButton(this);
     btnreturntomain->show();
     btnreturntomain->setText("Return to Main menu");
-    btnreturntomain->setGeometry(0,0,150,75);
+    btnreturntomain->setGeometry(0,0,150,80);
     btnreturntomain->move(300, 300);
     connect(btnreturntomain, SIGNAL(clicked()), this, SLOT(SetupGUI()));
-//    GUI.append(btnreturntomain);
+    GUI.append(btnreturntomain);
 
     btnplayagain = new QPushButton(this);
     btnplayagain->show();
@@ -514,7 +533,7 @@ void MainWindow::EndGame()
     btnplayagain->setGeometry(0,0,150,75);
     btnplayagain->move(550, 300);
     connect(btnplayagain, SIGNAL(clicked()), this, SLOT(Playagain()));
-//    GUI.append(btnplayagain);
+    GUI.append(btnplayagain);
 
     menustatus = new QLabel(this);
     menustatus->setGeometry(0,0,200,50);
@@ -523,10 +542,9 @@ void MainWindow::EndGame()
     if (((serv_won) && (player_is_server)) || ((client_won) && (player_is_client)))
     {
        menustatus->setText("Congratulations, you won!");       //update and show leaderboard
-    }else{
+    }else if (((client_won) && (player_is_server)) || ((serv_won) && (player_is_client))){
        menustatus->setText(opponentname+ ", won! Good luck next time.");            //update and show leaderboard
     }
-
 }
 
 void MainWindow::Playagain()
