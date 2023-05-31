@@ -69,7 +69,8 @@ void Server::readyRead()
 
 bool Server::writeData(QByteArray data)
 {
-    if ((server_turn) || (first_time_setup))
+    MainWindow mainw;
+    if ((server_turn) || (first_time_setup) || !mainw.playing_game)
     {
         if(socket->state() == QAbstractSocket::ConnectedState)
         {

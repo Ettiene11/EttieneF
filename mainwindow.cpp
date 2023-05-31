@@ -24,13 +24,13 @@ void MainWindow::SetupGUI()
 
 //    if (server)
 //        server->deleteLater();
-    QVectorIterator<QPushButton*> buttons(GUI);
-    while (buttons.hasNext())
-    {
-        QPushButton* button = buttons.next();
-        GUI.removeOne(button);
-        button->hide();
-    }
+//    QVectorIterator<QPushButton*> buttons(GUI);
+//    while (buttons.hasNext())
+//    {
+//        QPushButton* button = buttons.next();
+//        GUI.removeOne(button);
+//        button->hide();
+//    }
 
     //    set background
     setFixedSize(1000, 800);
@@ -104,11 +104,6 @@ void MainWindow::NetworkGUI()
     background->setPixmap(QPixmap(":img/chess_background.jpg").scaled(1000,800));
     background->move(0,0);
     background->setFixedSize(1000,800);
-//    QPixmap bkgnd(":img/chess_background.jpg");
-//    bkgnd = bkgnd.scaled(1000,800, Qt::IgnoreAspectRatio);
-//    QPalette palette;
-//    palette.setBrush(QPalette::Background, bkgnd);
-//    this->setPalette(palette);
 
     //Main menu
     QPushButton* new_button = new QPushButton(this);
@@ -163,7 +158,8 @@ void MainWindow::clientSend(QByteArray data)
 
 void MainWindow::receive(QByteArray data)
 {
-    if (!playing_game)
+    if ((!playing_game) && (!((QString(data) == "endgame") || (QString(data) == "forfeit") || (QString(data) == "draw") || (QString(data) == "nodraw")
+                              || (QString(data) == "yesdraw") || (QString(data) == "playagain") || (QString(data) == "playagainyes") || (QString(data) == "playagainno"))))
     {
         if (player_is_server == true)
         {
@@ -190,22 +186,28 @@ void MainWindow::receive(QByteArray data)
                 EndGame();
            }else if (QString(data) == "draw")
            {
-                Askopponent("draw");
+                question = "draw";
+                Askopponent();
            }else if (QString(data) == "nodraw")
            {
                status->setText(opponentname + " did not accept draw request. Continue playing.");
+               playing_game = true;
            }else if (QString(data) == "yesdraw")
            {
                EndGame();
            }else if ((QString(data) == "playagain"))
            {
-                Askopponent("playagain");
+               ans = true;
+               question = "playagain";
+               Askopponent();
            }else if ((QString(data) == "playagainyes"))
            {
-                status->setText(opponentname + " joined for another game."+ turn + "'s turn to play.");
+                NewGame();
+                status->setText(opponentname + " joined for another game.");
            }
            else if ((QString(data) == "playagainno"))
           {
+               SetupGUI();
                menustatus->setText(opponentname + " returned to main menu.");
           }
         }else{
@@ -222,59 +224,77 @@ void MainWindow::receive(QByteArray data)
     }
 }
 
-void MainWindow::Askopponent(QString str)
+void MainWindow::Askopponent()
 {
-    if (str == "draw")
+    btnyes = new QPushButton(this);
+    btnyes->setText("Yes");
+    btnyes->setFixedSize(50,50);
+
+    btnno = new QPushButton(this);
+    btnno->setText("No");
+    btnno->setFixedSize(50,50);
+
+    if (question == "draw")
     {
         playing_game = false;
         status->setText(opponentname + " wants to draw, do you accept?");
-        btnyes = new QPushButton;
-        btnyes->setFixedSize(50,50);
         btnyes->move(810,270);
-        connect(btnyes, SIGNAL(clicked()), this, SLOT(Responsefromopponent(true, "draw")));
+        btnyes->show();
+        connect(btnyes, SIGNAL(clicked()), this, SLOT(ansyes()));
 
-        btnno = new QPushButton;
-        btnno->setFixedSize(50,50);
         btnno->move(870,270);
-        connect(btnno, SIGNAL(clicked()), this, SLOT(Responsefromopponent(false, "draw")));
+        btnno->show();
+        connect(btnno, SIGNAL(clicked()), this, SLOT(ansno()));
     }
-    if (str == "playagin")
+    if (question == "playagain")
     {
         menustatus->setText(opponentname + " wants to play again, do you accept?");
-        connect(btnplayagain, SIGNAL(clicked()), this, SLOT(Responsefromopponent(true, "playagain")));
-        connect(btnno, SIGNAL(clicked()), this, SLOT(Responsefromopponent(false, "playagain")));
+        btnyes->move(400,270);
+        btnyes->show();
+        connect(btnyes, SIGNAL(clicked()), this, SLOT(ansyes()));
+
+        btnno->move(460,270);
+        btnno->show();
+        connect(btnno, SIGNAL(clicked()), this, SLOT(ansno()));
     }
 }
 
-void MainWindow::Responsefromopponent(bool ans, QString str)
+void MainWindow::ansyes()
 {
-    if ((ans) && (str == "draw"))
+    if (question == "draw")
     {
+        btnyes->hide();
+        btnno->hide();
+        btnyes->deleteLater();
+        btnno->deleteLater();
         EndGame();
         if (player_is_client)
         {
             clientSend("yesdraw");
         }else{serverSend("yesdraw");}
-    }else if ((!ans) && (str == "draw")){
-        btnyes->hide();
-        btnno->hide();
-        btnyes->deleteLater();
-        btnno->deleteLater();
-        playing_game = true;
-        if (player_is_client)
-        {
-            clientSend("nodraw");
-        }else{serverSend("nodraw");}
-    }
-    if ((ans) && (str == "playagain"))
-    {
-        NewGame();
+    }else if (question == "playagain"){
         if (player_is_client)
         {
             clientSend("playagainyes");
         }else{serverSend("playagainyes");}
-    }else if ((!ans) && (str == "playagain"))
+        NewGame();
+    }
+}
+
+void MainWindow::ansno()
+{
+    if (question == "draw")
     {
+        playing_game = true;
+        btnyes->hide();
+        btnno->hide();
+        btnyes->deleteLater();
+        btnno->deleteLater();
+        if (player_is_client)
+        {
+            clientSend("nodraw");
+        }else{serverSend("nodraw");}
+    }else if (question == "playagain"){
         if (player_is_client)
         {
             clientSend("playagainno");
@@ -352,14 +372,14 @@ QByteArray MainWindow::stringtoarray()
 
 void MainWindow::NewGame()
 {
-    QVectorIterator<QPushButton*> buttons(GUI);
-    while (buttons.hasNext())
-    {
-        QPushButton* button = buttons.next();
-        button->deleteLater();
-        button->hide();
-    }
-
+//    QVectorIterator<QPushButton*> buttons(GUI);
+//    while (buttons.hasNext())
+//    {
+//        QPushButton* button = buttons.next();
+//        button->hide();
+//        button->deleteLater();
+//    }
+    playing_game = true;
     //    set background
     background->setPixmap(QPixmap(":img/board.png").scaled(width,height));
     background->setFixedSize(width+200, height);
@@ -401,7 +421,7 @@ void MainWindow::NewGame()
         btnForfeit->setText("Forfeit");
         btnForfeit->setGeometry(0,0,100,75);
         btnForfeit->move(825, 500);
-        connect(btnForfeit, SIGNAL(clicked()), this, SLOT(Sendgamestatus("forfeit")));
+        connect(btnForfeit, SIGNAL(clicked()), this, SLOT(Forfeit()));//"forfeit"
         GUI.append(btnForfeit);
 
         QPushButton* btnDraw = new QPushButton(this);
@@ -409,7 +429,7 @@ void MainWindow::NewGame()
         btnDraw->setText("Draw");
         btnDraw->setGeometry(0,0,100,75);
         btnDraw->move(825, 600);
-        connect(btnDraw, SIGNAL(clicked()), this, SLOT(Sendgamestatus("draw")));
+        connect(btnDraw, SIGNAL(clicked()), this, SLOT(Draw()));
         GUI.append(btnDraw);
     }else if (singleplayer)
     {
@@ -446,18 +466,28 @@ void MainWindow::ResetGame()
         all_pieces.removeOne(p);
         p->hide();
     }
+
     status->hide();
     status->deleteLater();
     welc_message->hide();
     welc_message->deleteLater();
     new_frame->hide();
     new_frame->deleteLater();
+    turn = 'w';
 }
 
 void MainWindow::EndGame()
 {
     playing_game = false;
     ResetGame();
+
+//    QVectorIterator<QPushButton*> buttons(GUI);
+//    while (buttons.hasNext())
+//    {
+//        QPushButton* button = buttons.next();
+//        button->hide();
+//        button->deleteLater();
+//    }
 
     //    set background
     setFixedSize(1000, 800);
@@ -476,19 +506,54 @@ void MainWindow::EndGame()
     btnreturntomain->setGeometry(0,0,150,75);
     btnreturntomain->move(300, 300);
     connect(btnreturntomain, SIGNAL(clicked()), this, SLOT(SetupGUI()));
-    GUI.append(btnreturntomain);
+//    GUI.append(btnreturntomain);
 
     btnplayagain = new QPushButton(this);
     btnplayagain->show();
     btnplayagain->setText("Play again");
     btnplayagain->setGeometry(0,0,150,75);
     btnplayagain->move(550, 300);
-    connect(btnplayagain, SIGNAL(clicked()), this, SLOT(Sendgamestatus("playagin")));
-    GUI.append(btnplayagain);
+    connect(btnplayagain, SIGNAL(clicked()), this, SLOT(Playagain()));
+//    GUI.append(btnplayagain);
+
+    menustatus = new QLabel(this);
+    menustatus->setGeometry(0,0,200,50);
+    menustatus->move(450, 200);
+    menustatus->show();
+    if (((serv_won) && (player_is_server)) || ((client_won) && (player_is_client)))
+    {
+       menustatus->setText("Congratulations, you won!");       //update and show leaderboard
+    }else{
+       menustatus->setText(opponentname+ ", won! Good luck next time.");            //update and show leaderboard
+    }
+
 }
 
-void MainWindow::Sendgamestatus(QString str)
+void MainWindow::Playagain()
 {
+    QString str = "playagain";
+    if (player_is_client)
+    {
+        clientSend(str.toUtf8());
+    }else{serverSend(str.toUtf8());}
+    menustatus->setText("Asking " + opponentname + " to play again.");
+}
+
+void MainWindow::Forfeit()
+{
+    QString str = "forfeit";
+    if (player_is_client)
+    {
+        clientSend(str.toUtf8());
+    }else{serverSend(str.toUtf8());}
+    EndGame();
+}
+
+void MainWindow::Draw()
+{
+    playing_game = false;
+    status->setText(playername + " wants to draw, waiting for opponents response?");
+    QString str = "draw";
     if (player_is_client)
     {
         clientSend(str.toUtf8());
@@ -683,8 +748,9 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                            cout << "Checkmate, " << t->team << " won!" << endl;
                            if (player_is_client)
                            {
+                               client_won = true;
                                clientSend("endgame");
-                           }else{serverSend("endgame");}
+                           }else{serverSend("endgame"); serv_won = true;}
                            EndGame();
                         }else{
                            cout << turn << "'s king is in check, no checkmate!" << endl;

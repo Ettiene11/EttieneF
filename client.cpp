@@ -22,7 +22,8 @@ bool Client::connectToHost(QString host)
 
 bool Client::writeData(QByteArray data)
 {
-    if (client_turn)
+    MainWindow mainw;
+    if (client_turn || !mainw.playing_game)
     {
         if(socket->state() == QAbstractSocket::ConnectedState)
         {
