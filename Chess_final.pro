@@ -35,7 +35,8 @@ SOURCES += \
         pawn.cpp \
         queen.cpp \
         rook.cpp \
-        server.cpp
+        server.cpp \
+        stockfishconnector.cpp
 
 HEADERS += \
         bishop.h \
@@ -47,7 +48,8 @@ HEADERS += \
         pawn.h \
         queen.h \
         rook.h \
-        server.h
+        server.h \
+        stockfishconnector.h
 
 FORMS += \
         mainwindow.ui

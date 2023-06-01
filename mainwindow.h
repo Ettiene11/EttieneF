@@ -20,6 +20,7 @@
 #include <QChar>
 #include "server.h"
 #include "client.h"
+#include "stockfishconnector.h"
 
 #include <vector>
 #include <random>
@@ -66,7 +67,8 @@ private:
     // Variables
     int width = 800, height = 800, from_xcoord, from_ycoord, to_xcoord, to_ycoord, enemy_index, king_xpos, king_ypos,
     vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary,
-    right_up_diagonal_boundary, right_down_diagonal_boundary, left_up_diagonal_boundary, left_down_diagonal_boundary, score;
+    right_up_diagonal_boundary, right_down_diagonal_boundary, left_up_diagonal_boundary, left_down_diagonal_boundary, score,
+    AIto_x, AIto_y, AIfrom_x, AIfrom_y;
     char turn = 'w', clicked_team, team;
     bool clicked_on_piece = false, capture = false, check = false, checkmate = false, queenside_castling = false, kingside_castling = false,
     player_is_server = false, player_is_client = false, multiplayer = false, singleplayer = false, serv_won = false, client_won = false;
@@ -130,6 +132,22 @@ private slots:
     //leaderboard
     int getScore(QString);
     void updateScore(QByteArray, int);
+
+    //AI
+    void AImove();
+    void ResetAI();
+    QString convertCoordinatesToChessPosition(int, int, int, int);
+//    void startup_engine();
+    void AIreceive(QByteArray);
+//    void writedata();
+    int convertLetterToNumber(char);
+    void convertChessPosition(const QString);
+
+private:
+    StockfishConnector* connector;
+    QPushButton *AI;
+    QPushButton *btnwrite;
+    QString allmoves, chessposition, command, position;
 };
 
 #endif // MAINWINDOW_H

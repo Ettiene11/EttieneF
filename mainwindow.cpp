@@ -85,6 +85,82 @@ void MainWindow::SetupGUI()
 void MainWindow::singleplayer_clicked()
 {
     singleplayer = true;
+    name->deleteLater();
+    name->hide();
+    lblname->deleteLater();
+    lblname->hide();
+
+    playername = name->text();
+    opponentname = "The computer";
+    team = 'w';
+
+    //startup engine
+    connector = new StockfishConnector;
+    connect(connector, SIGNAL(dataReceived(QByteArray)), this, SLOT(AIreceive(QByteArray)));
+
+    NewGame();
+}
+
+void MainWindow::AIreceive(QByteArray data)
+{
+    chessposition = data;
+    if (chessposition == "none")
+    {
+        gamestatus->setText("Checkmate, Computer won!");
+        EndGame();
+        menustatus->setText("Game over, Computer won!");
+    }
+    gamestatus->show();
+    board board;
+    //move piece
+    convertChessPosition(chessposition);
+
+    QVectorIterator<piecetracker*> tracker2(piece_tracker);
+    QVectorIterator<QLabel*> piece2(all_pieces);
+
+    while (tracker2.hasNext())
+    {
+        piecetracker *t2 = tracker2.next();
+        QLabel *p2 = piece2.next();
+        if ((board.AssignxCoord(AIfrom_x) == t2->x_cor) && (board.AssignyCoord(AIfrom_y) == t2->y_cor))
+        {
+            p2->move(board.AssignxCoord(AIto_x), board.AssignyCoord(AIto_y));
+            t2->x_cor = board.AssignxCoord(AIto_x);
+            t2->y_cor = board.AssignyCoord(AIto_y);
+            if (t2->num_moves<5)   //we are only interested in moves 0-2, important that it stays 1 char for transfer
+            {++t2->num_moves;}
+        }
+        if (t2->team == 'w')
+        {
+            if ((board.AssignxCoord(AIto_x) == t2->x_cor) && (board.AssignyCoord(AIto_y) == t2->y_cor))
+            {
+                piece_tracker.removeOne(t2);
+                p2->hide();
+                all_pieces.removeOne(p2);
+            }
+        }
+    }
+
+    allmoves = allmoves + " " + chessposition;
+    qDebug() << data;
+}
+
+int MainWindow::convertLetterToNumber(char letter)
+{
+    return letter - 'a' + 1;
+}
+
+void MainWindow::convertChessPosition(const QString position)
+{
+    AIfrom_x = convertLetterToNumber(position[0].toLatin1());
+    AIfrom_y = position[1].toLatin1() - '0';
+    AIto_x = convertLetterToNumber(position[2].toLatin1());
+    AIto_y = position[3].toLatin1() - '0';
+
+//    allmoves = allmoves + " " + position;
+//    command = "position startpos moves " + allmoves;
+
+//    connector.writeCommand(command + "\ngo");
 }
 
 void MainWindow::multiplayer_clicked()
@@ -423,11 +499,14 @@ void MainWindow::NewGame()
     new_frame->move(width,-70);
     new_frame->show();
 
-    if (player_is_client)
+    if (multiplayer)         //for singleplayer, player is always white
     {
-        team = 'w';
-    }else{
-        team = 'b';
+        if (player_is_client)
+        {
+            team = 'w';
+        }else{
+            team = 'b';
+        }
     }
 
     welc_message = new QLabel(this);
@@ -478,7 +557,7 @@ void MainWindow::NewGame()
         btnReset->setText("Reset");
         btnReset->setGeometry(0,0,100,75);
         btnReset->move(845, 500);
-        connect(btnReset, SIGNAL(clicked()), this, SLOT(ResetGame()));
+        connect(btnReset, SIGNAL(clicked()), this, SLOT(ResetAI()));
         GUI.append(btnReset);
 
         QPushButton* btnQuit = new QPushButton(this);
@@ -486,11 +565,17 @@ void MainWindow::NewGame()
         btnQuit->setText("Quit");
         btnQuit->setGeometry(0,0,100,75);
         btnQuit->move(845, 600);
-        connect(btnQuit, SIGNAL(clicked()), this, SLOT(Endgame()));
+        connect(btnQuit, SIGNAL(clicked()), this, SLOT(EndGame()));
         GUI.append(btnQuit);
     }
 
     DefaultBoard();
+}
+
+void MainWindow::ResetAI()
+{
+    EndGame();
+    NewGame();
 }
 
 void MainWindow::ResetGame()
@@ -516,6 +601,8 @@ void MainWindow::ResetGame()
     gamestatus->hide();
     gamestatus->deleteLater();
     turn = 'w';
+    chessposition.clear();
+    allmoves.clear();
 }
 
 void MainWindow::EndGame()
@@ -569,12 +656,20 @@ void MainWindow::EndGame()
 
 void MainWindow::Playagain()
 {
-    QString str = "playagain";
-    if (player_is_client)
+    if (multiplayer)
     {
-        clientSend(str.toUtf8());
-    }else{serverSend(str.toUtf8());}
-    menustatus->setText("Asking " + opponentname + " to play again.");
+        QString str = "playagain";
+        if (player_is_client)
+        {
+            clientSend(str.toUtf8());
+        }else{serverSend(str.toUtf8());}
+        menustatus->setText("Asking " + opponentname + " to play again.");
+    }else{
+        NewGame();
+        chessposition.clear();
+        allmoves.clear();
+    }
+
 }
 
 void MainWindow::Forfeit()
@@ -675,7 +770,6 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
                 {
                     gamestatus->setText("You did not click on piece");
                 }
-
             }
         }
 
@@ -773,11 +867,14 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                         t->type = 'q';
                     }
 
-                    if (turn == 'w')
+                    if (multiplayer)
                     {
-                        turn = 'b';
-                    }else{
-                        turn = 'w';
+                        if (turn == 'w')
+                        {
+                            turn = 'b';
+                        }else{
+                            turn = 'w';
+                        }
                     }
 
                     if (Check_opponent(t->x_cor, t->y_cor, t))
@@ -804,11 +901,20 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
 
                     QString s = QString(turn);
                     status->setText("Game status: " + s + "'s turn to play!");
-                    if (player_is_client)
+                    if (multiplayer)
                     {
-                        clientSend(stringtoarray());
-                    }else{
-                        serverSend(stringtoarray());
+                        if (player_is_client)
+                        {
+                            clientSend(stringtoarray());
+                        }else{
+                            serverSend(stringtoarray());
+                        }
+                    }
+                    //AI move
+                    if (singleplayer)
+                    {
+                        AImove();
+                        turn = 'w';
                     }
                 }
             Delete_possible_moves();
@@ -816,6 +922,31 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
         }
     }
     return 0;
+}
+
+void MainWindow::AImove()
+{
+    //player's move
+    QString position;
+    position = convertCoordinatesToChessPosition(from_xcoord, from_ycoord, to_xcoord, to_ycoord);
+    if (allmoves.isNull())
+    {
+        allmoves = position;
+    }else{
+        allmoves = allmoves + " " + position;
+    }
+    command = "position startpos moves " + allmoves + "\ngo\n";
+    connector->writeData(command.toUtf8());//position startpos moves e2e3
+    //AIreadyread will emit and we get AI's move
+}
+
+QString MainWindow::convertCoordinatesToChessPosition(int from_x, int from_y, int to_x, int to_y) {
+    QString position;
+    position.append(QChar(from_x - 1 + 'a'));
+    position.append(QString::number(from_y));
+    position.append(QChar(to_x - 1 + 'a'));
+    position.append(QString::number(to_y));
+    return position;                             //format e2e4
 }
 
 bool MainWindow::Validmove(char type, int x, int y)  //check if piece moved into open space or onto enemy team's piece
