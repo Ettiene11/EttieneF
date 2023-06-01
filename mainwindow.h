@@ -66,7 +66,7 @@ private:
     // Variables
     int width = 800, height = 800, from_xcoord, from_ycoord, to_xcoord, to_ycoord, enemy_index, king_xpos, king_ypos,
     vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary,
-    right_up_diagonal_boundary, right_down_diagonal_boundary, left_up_diagonal_boundary, left_down_diagonal_boundary;
+    right_up_diagonal_boundary, right_down_diagonal_boundary, left_up_diagonal_boundary, left_down_diagonal_boundary, score;
     char turn = 'w', clicked_team, team;
     bool clicked_on_piece = false, capture = false, check = false, checkmate = false, queenside_castling = false, kingside_castling = false,
     player_is_server = false, player_is_client = false, multiplayer = false, singleplayer = false, serv_won = false, client_won = false;
@@ -75,7 +75,7 @@ private:
 
     //GUI
     QLabel* lblname, *status, *menustatus, *gamestatus, *background, *new_frame, *welc_message;
-    QString playername, opponentname;
+    QString playername, opponentname, leaderboardname;
     QPushButton* btnyes, *btnno, *btnreturntomain, *btnplayagain;
 
     //interaction
@@ -127,6 +127,9 @@ private slots:
     void ansyes();
     void ansno();
 
+    //leaderboard
+    int getScore(QString);
+    void updateScore(QByteArray, int);
 };
 
 #endif // MAINWINDOW_H

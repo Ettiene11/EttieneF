@@ -520,6 +520,7 @@ void MainWindow::ResetGame()
 
 void MainWindow::EndGame()
 {
+    //leaderboard
     playing_game = false;
     ResetGame();
 
@@ -736,6 +737,7 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                         piece_tracker.removeOne(piece_tracker[enemy_index]);
                         all_pieces[enemy_index]->hide();
                         all_pieces.removeOne(all_pieces[enemy_index]);
+                        //sound capture
                     }
 
                     p->move(board.AssignxCoord(to_xcoord), board.AssignyCoord(to_ycoord));
@@ -783,13 +785,18 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                         gamestatus->setText(QString(turn) + "'s king is in check.\nChecking for possible checkmate...");
                         if (Checkmate())
                         {
-                            gamestatus->setText("Checkmate, " + QString(t->team) + " won!");
+                        gamestatus->setText("Checkmate, " + QString(t->team) + " won!");
+                        ++score;
+                        updateScore(playername.toUtf8(),score);
                            if (player_is_client)
                            {
                                client_won = true;
                                clientSend("endgame");
-                           }else{serverSend("endgame"); serv_won = true;}
-                           EndGame();
+                           }else{
+                                serverSend("endgame");
+                                serv_won = true;
+                           }
+                        EndGame();
                         }else{
                            gamestatus->setText(QString(turn) + "'s king is in check, no checkmate!");
                         }
@@ -1200,6 +1207,19 @@ bool MainWindow::Castling(int num_moves, int left_bound, int right_bound, int to
     return false;
 }
 
+int MainWindow::getScore(QString name)
+{
+    int temp_score;
+
+    //file creation
+    return temp_score;
+}
+
+void MainWindow::updateScore(QByteArray name, int temp_score)
+{
+
+}
+
 MainWindow::~MainWindow()
 {
 //    if (client)
@@ -1208,3 +1228,5 @@ MainWindow::~MainWindow()
 //    if (server)
 //        server->deleteLater();
 }
+
+
