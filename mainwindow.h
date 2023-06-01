@@ -90,6 +90,9 @@ private:
     QString *input;
     QString *output;
 
+    //leaderboard
+    QLabel *scoredisplay;
+
 private slots:
     void SetupGUI();
     void NewGame();
@@ -130,8 +133,9 @@ private slots:
     void ansno();
 
     //leaderboard
-    int getScore(QString);
-    void updateScore(QByteArray, int);
+//    int getScore(QString);
+//    void updateScore(QByteArray, int);
+    void UpdateLeaderboard();
 
     //AI
     void AImove();

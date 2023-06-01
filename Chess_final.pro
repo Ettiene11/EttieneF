@@ -28,6 +28,7 @@ SOURCES += \
         bishop.cpp \
         board.cpp \
         client.cpp \
+        highscore.cpp \
         king.cpp \
         knight.cpp \
         main.cpp \
@@ -42,6 +43,7 @@ HEADERS += \
         bishop.h \
         board.h \
         client.h \
+        highscore.h \
         king.h \
         knight.h \
         mainwindow.h \

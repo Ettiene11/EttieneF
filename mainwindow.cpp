@@ -8,6 +8,7 @@
 #include <king.h>
 #include <client.h>
 #include <server.h>
+#include <highscore.h>
 
 using namespace std;
 
@@ -22,6 +23,7 @@ void MainWindow::SetupGUI()
     if (multiplayer == true)
     {
         menustatus->hide();
+        scoredisplay->hide();
         if (player_is_client)
         {
             client->deleteLater();
@@ -519,6 +521,7 @@ void MainWindow::NewGame()
 
     menustatus->hide();
 //    menustatus->deleteLater();
+//    scoredisplay->hide();
 
     QString s = QString(turn);
     status = new QLabel(this);
@@ -607,7 +610,18 @@ void MainWindow::ResetGame()
 
 void MainWindow::EndGame()
 {
-    //leaderboard
+//    if (multiplayer)
+//    {
+//        QFile scoresFile("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/build highscore/highscore/scores.txt");
+
+//        if (scoresFile.open(QIODevice::ReadOnly))
+//        {
+//            scoredisplay->setText(scoresFile.readAll());
+//        }
+//        scoredisplay->move(350,400);
+//        scoredisplay->setGeometry(0,0,100,400);
+//        scoredisplay->show();
+//    }
     playing_game = false;
     ResetGame();
 
@@ -883,8 +897,6 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                         if (Checkmate())
                         {
                         gamestatus->setText("Checkmate, " + QString(t->team) + " won!");
-                        ++score;
-                        updateScore(playername.toUtf8(),score);
                            if (player_is_client)
                            {
                                client_won = true;
@@ -893,7 +905,8 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                                 serverSend("endgame");
                                 serv_won = true;
                            }
-                        EndGame();
+//                           UpdateLeaderboard();
+                            EndGame();
                         }else{
                            gamestatus->setText(QString(turn) + "'s king is in check, no checkmate!");
                         }
@@ -922,6 +935,32 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
         }
     }
     return 0;
+}
+
+void MainWindow::UpdateLeaderboard()
+{
+    int score = 100;
+    QVectorIterator<piecetracker*> tracker(piece_tracker);
+
+    while (tracker.hasNext())
+    {
+        piecetracker *t = tracker.next();
+        if (client_won)
+        {
+            if (t->team == 'w')
+            {
+               score = score - t->num_moves;
+            }
+        }else{
+            if (t->team == 'b')
+            {
+               score = score - t->num_moves;
+            }
+        }
+    }
+
+    HighScore hs;
+    hs.addScore(playername.toUtf8(), score);
 }
 
 void MainWindow::AImove()
@@ -1338,18 +1377,18 @@ bool MainWindow::Castling(int num_moves, int left_bound, int right_bound, int to
     return false;
 }
 
-int MainWindow::getScore(QString name)
-{
-    int temp_score;
+//int MainWindow::getScore(QString name)
+//{
+//    int temp_score;
 
-    //file creation
-    return temp_score;
-}
+//    //file creation
+//    return temp_score;
+//}
 
-void MainWindow::updateScore(QByteArray name, int temp_score)
-{
+//void MainWindow::updateScore(QByteArray name, int temp_score)
+//{
 
-}
+//}
 
 MainWindow::~MainWindow()
 {
