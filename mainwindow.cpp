@@ -32,8 +32,14 @@ void MainWindow::SetupGUI()
             serverSend(str.toUtf8());
         }
     }
+    if (player_is_server)
+    {
+        serverSend("serverleft");
+    }
     singleplayer = false;
     multiplayer = false;
+    player_is_client = false;
+    player_is_server = false;
 
     QVectorIterator<QPushButton*> buttons(GUI);
     while (buttons.hasNext())
@@ -186,7 +192,7 @@ void MainWindow::multiplayer_clicked()
         scoredisplay = new QLabel(this);
         scoredisplay->setText(line);
         scoredisplay->move(450,600);
-        scoredisplay->setGeometry(0,0,100,100);
+        scoredisplay->setGeometry(425,300,500,500);
         scoredisplay->show();
     }
     scoresFile.close();
@@ -246,6 +252,7 @@ void MainWindow::makeClient()
 
     client->writeData(playername.toUtf8());
     player_is_client = true;
+    menustatus = new QLabel(this);
 }
 
 void MainWindow::makeServer()
@@ -297,6 +304,7 @@ void MainWindow::receive(QByteArray data)
            if (QString(data) == "endgame")
            {
                 EndGame();
+                menustatus->setText(opponentname + " has won! Goodluck next time!");
            }else if (QString(data) == "forfeit")
            {
                 EndGame();
@@ -307,7 +315,7 @@ void MainWindow::receive(QByteArray data)
                 Askopponent();
            }else if (QString(data) == "nodraw")
            {
-               status->setText(opponentname + " did not accept draw request. Continue playing.");
+               status->setText(opponentname + " did not accept\n draw request. Continue playing.");
                playing_game = true;
            }else if (QString(data) == "yesdraw")
            {
@@ -343,7 +351,7 @@ void MainWindow::receive(QByteArray data)
                 turn = 'w';
             }
             QString s = QString(turn);
-            status->setText("Game status: " + s + "'s turn to play!");
+            status->setText("Game status:\n" + s + "'s turn to play!");
         }
     }
 }
@@ -363,8 +371,9 @@ void MainWindow::Askopponent()
     if (question == "draw")
     {
         playing_game = false;
-        status->setText(opponentname + " wants to draw, do you accept?");
-        btnyes->move(835,300);
+        status->setText(opponentname + " wants to draw,\ndo you accept?");
+        status->move(815,250);
+        btnyes->move(830,300);
         btnyes->show();
         connect(btnyes, SIGNAL(clicked()), this, SLOT(ansyes()));
 
@@ -553,7 +562,7 @@ void MainWindow::NewGame()
 
     gamestatus = new QLabel(this);
     gamestatus->setGeometry(0,0,200,50);
-    gamestatus->move(825,300);
+    gamestatus->move(835,300);
     gamestatus->show();
 
     QString title;
@@ -564,7 +573,7 @@ void MainWindow::NewGame()
         btnForfeit->setText("Forfeit");
         btnForfeit->setGeometry(0,0,100,75);
         btnForfeit->move(845, 500);
-        connect(btnForfeit, SIGNAL(clicked()), this, SLOT(Forfeit()));//"forfeit"
+        connect(btnForfeit, SIGNAL(clicked()), this, SLOT(Forfeit()));
         GUI.append(btnForfeit);
 
         QPushButton* btnDraw = new QPushButton(this);
@@ -746,7 +755,8 @@ void MainWindow::Forfeit()
 void MainWindow::Draw()
 {
     playing_game = false;
-    status->setText(playername + " wants to draw, waiting for opponents response?");
+    status->setText(playername + " wants to draw,\nwaiting for opponents response?");
+    status->move(815,300);
     QString str = "draw";
     if (player_is_client)
     {
@@ -977,7 +987,7 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                     }
 
                     QString s = QString(turn);
-                    status->setText("Game status: " + s + "'s turn to play!");
+                    status->setText("Game status:\n" + s + "'s turn to play!");
                     if (multiplayer)
                     {
                         if (player_is_client)

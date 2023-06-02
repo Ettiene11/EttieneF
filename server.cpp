@@ -28,7 +28,7 @@ void Server::newConnection()
 
 void Server::disconnected()
 {
-    QTcpSocket *socket = static_cast<QTcpSocket*>(sender());
+    socket = static_cast<QTcpSocket*>(sender());
     QByteArray *buffer = buffers.value(socket);
     buffers.remove(socket);
     qint32 *s = sizes.value(socket);
