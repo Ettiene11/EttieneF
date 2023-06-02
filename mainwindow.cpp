@@ -610,18 +610,20 @@ void MainWindow::ResetGame()
 
 void MainWindow::EndGame()
 {
-//    if (multiplayer)
-//    {
-//        QFile scoresFile("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/build highscore/highscore/scores.txt");
+    if (multiplayer)
+    {
+        QFile scoresFile("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/textfiles/scores.txt");
+        if (scoresFile.open(QIODevice::ReadOnly | QIODevice::Text)){
+            QTextStream stream(&scoresFile);
+            QString line = stream.readAll();
+            scoredisplay = new QLabel(this);
+            scoredisplay->setText(line);
+            scoredisplay->move(450,600);
+            scoredisplay->setGeometry(0,0,100,100);
+            scoredisplay->show();
+        }
 
-//        if (scoresFile.open(QIODevice::ReadOnly))
-//        {
-//            scoredisplay->setText(scoresFile.readAll());
-//        }
-//        scoredisplay->move(350,400);
-//        scoredisplay->setGeometry(0,0,100,400);
-//        scoredisplay->show();
-//    }
+    }
     playing_game = false;
     ResetGame();
 
@@ -905,7 +907,7 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                                 serverSend("endgame");
                                 serv_won = true;
                            }
-//                           UpdateLeaderboard();
+                           UpdateLeaderboard();
                             EndGame();
                         }else{
                            gamestatus->setText(QString(turn) + "'s king is in check, no checkmate!");
@@ -961,6 +963,7 @@ void MainWindow::UpdateLeaderboard()
 
     HighScore hs;
     hs.addScore(playername.toUtf8(), score);
+//    hs.UpdateScore("piet");
 }
 
 void MainWindow::AImove()
