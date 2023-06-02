@@ -106,6 +106,7 @@ private slots:
     void ResetGame();
     void EndGame();
     void NetworkGUI();
+    void moveAIpiece();
 
     void makeClient();
     void makeServer();
@@ -157,9 +158,10 @@ private:
     StockfishConnector* connector;
     QPushButton *AI;
     QPushButton *btnwrite;
+    QTimer *timer;
     QString allmoves, chessposition, command, position;
     bool askbestmove = false;
-    int hints = 3;
+    int hints = 3, counter = 0, xdelta, ydelta, newx, newy;
 };
 
 #endif // MAINWINDOW_H

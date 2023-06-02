@@ -106,6 +106,10 @@ void MainWindow::singleplayer_clicked()
     connector = new StockfishConnector;
     connect(connector, SIGNAL(dataReceived(QByteArray)), this, SLOT(AIreceive(QByteArray)));
 
+    timer = new QTimer(this);
+    timer->setInterval(10);
+    connect(timer, SIGNAL(timeout()), this, SLOT(moveAIpiece()));
+
     NewGame();
 }
 
@@ -116,6 +120,7 @@ void MainWindow::AIreceive(QByteArray data)
         status->setText("Your best move is " + data + ", " + QString(10)  + QString::number(hints) + " hints left.");
         askbestmove = false;
     }else{
+        counter = 0;
         chessposition = data;
         if (chessposition == "none")
         {
@@ -137,12 +142,34 @@ void MainWindow::AIreceive(QByteArray data)
             QLabel *p2 = piece2.next();
             if ((board.AssignxCoord(AIfrom_x) == t2->x_cor) && (board.AssignyCoord(AIfrom_y) == t2->y_cor))
             {
-                p2->move(board.AssignxCoord(AIto_x), board.AssignyCoord(AIto_y));
-                t2->x_cor = board.AssignxCoord(AIto_x);
-                t2->y_cor = board.AssignyCoord(AIto_y);
+                xdelta = (abs(board.AssignxCoord(AIfrom_x)-board.AssignxCoord(AIto_x)))/100;
+                ydelta =(abs(board.AssignyCoord(AIfrom_y)-board.AssignyCoord(AIto_y)))/100;
+                newx = board.AssignxCoord(AIfrom_x);
+                newy = board.AssignyCoord(AIfrom_y);
                 if (t2->num_moves<5)   //we are only interested in moves 0-2, important that it stays 1 char for transfer
                 {++t2->num_moves;}
             }
+        }
+
+        timer->start();
+        allmoves = allmoves + " " + chessposition;
+        qDebug() << data;
+    }
+}
+
+void MainWindow::moveAIpiece()
+{
+    board board;
+    ++counter;
+    QVectorIterator<piecetracker*> tracker2(piece_tracker);
+    QVectorIterator<QLabel*> piece2(all_pieces);
+
+    while (tracker2.hasNext())
+    {
+        piecetracker *t2 = tracker2.next();
+        QLabel *p2 = piece2.next();
+        if (counter == 100)
+        {
             if (t2->team == 'w')
             {
                 if ((board.AssignxCoord(AIto_x) == t2->x_cor) && (board.AssignyCoord(AIto_y) == t2->y_cor))
@@ -150,12 +177,38 @@ void MainWindow::AIreceive(QByteArray data)
                     piece_tracker.removeOne(t2);
                     p2->hide();
                     all_pieces.removeOne(p2);
+                    player.setMedia(QUrl::fromLocalFile("capture.wav"));
+                    player.play();
+                    timer->stop();
+                    break;
                 }
             }
         }
-
-        allmoves = allmoves + " " + chessposition;
-        qDebug() << data;
+        if ((board.AssignxCoord(AIfrom_x) == t2->x_cor) && (board.AssignyCoord(AIfrom_y) == t2->y_cor))
+        {
+            if (board.AssignyCoord(AIfrom_y) < board.AssignyCoord(AIto_y))
+            {
+                newy = newy + ydelta;
+            }else{
+                newy = newy - ydelta;
+            }
+            if (board.AssignxCoord(AIfrom_x) < board.AssignxCoord(AIto_x))
+            {
+                newx = newx + xdelta;
+            }else{
+                newx = newx - xdelta;
+            }
+           p2->move(newx, newy);
+           if (counter == 100)
+           {
+               timer->stop();
+               t2->x_cor = board.AssignxCoord(AIto_x);
+               t2->y_cor = board.AssignyCoord(AIto_y);
+               player.setMedia(QUrl::fromLocalFile("move-self.wav"));
+               player.play();
+           }
+           break;
+        }
     }
 }
 
