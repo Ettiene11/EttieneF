@@ -17,5 +17,6 @@
         <file>img/w_rook.png</file>
         <file>img/frame.png</file>
         <file>textfiles/scores.txt</file>
+        <file>img/aim.jpg</file>
     </qresource>
 </RCC>

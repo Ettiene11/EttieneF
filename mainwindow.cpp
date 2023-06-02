@@ -105,46 +105,52 @@ void MainWindow::singleplayer_clicked()
 
 void MainWindow::AIreceive(QByteArray data)
 {
-    chessposition = data;
-    if (chessposition == "none")
+    if (askbestmove)
     {
-        gamestatus->setText("Checkmate, Computer won!");
-        EndGame();
-        menustatus->setText("Game over, Computer won!");
-    }
-    gamestatus->show();
-    board board;
-    //move piece
-    convertChessPosition(chessposition);
-
-    QVectorIterator<piecetracker*> tracker2(piece_tracker);
-    QVectorIterator<QLabel*> piece2(all_pieces);
-
-    while (tracker2.hasNext())
-    {
-        piecetracker *t2 = tracker2.next();
-        QLabel *p2 = piece2.next();
-        if ((board.AssignxCoord(AIfrom_x) == t2->x_cor) && (board.AssignyCoord(AIfrom_y) == t2->y_cor))
+        status->setText("Your best move is " + data + ", " + QString(10)  + QString::number(hints) + " hints left.");
+        askbestmove = false;
+    }else{
+        chessposition = data;
+        if (chessposition == "none")
         {
-            p2->move(board.AssignxCoord(AIto_x), board.AssignyCoord(AIto_y));
-            t2->x_cor = board.AssignxCoord(AIto_x);
-            t2->y_cor = board.AssignyCoord(AIto_y);
-            if (t2->num_moves<5)   //we are only interested in moves 0-2, important that it stays 1 char for transfer
-            {++t2->num_moves;}
+            gamestatus->setText("Checkmate, Computer won!");
+            EndGame();
+            menustatus->setText("Game over, Computer won!");
         }
-        if (t2->team == 'w')
+        gamestatus->show();
+        board board;
+        //move piece
+        convertChessPosition(chessposition);
+
+        QVectorIterator<piecetracker*> tracker2(piece_tracker);
+        QVectorIterator<QLabel*> piece2(all_pieces);
+
+        while (tracker2.hasNext())
         {
-            if ((board.AssignxCoord(AIto_x) == t2->x_cor) && (board.AssignyCoord(AIto_y) == t2->y_cor))
+            piecetracker *t2 = tracker2.next();
+            QLabel *p2 = piece2.next();
+            if ((board.AssignxCoord(AIfrom_x) == t2->x_cor) && (board.AssignyCoord(AIfrom_y) == t2->y_cor))
             {
-                piece_tracker.removeOne(t2);
-                p2->hide();
-                all_pieces.removeOne(p2);
+                p2->move(board.AssignxCoord(AIto_x), board.AssignyCoord(AIto_y));
+                t2->x_cor = board.AssignxCoord(AIto_x);
+                t2->y_cor = board.AssignyCoord(AIto_y);
+                if (t2->num_moves<5)   //we are only interested in moves 0-2, important that it stays 1 char for transfer
+                {++t2->num_moves;}
+            }
+            if (t2->team == 'w')
+            {
+                if ((board.AssignxCoord(AIto_x) == t2->x_cor) && (board.AssignyCoord(AIto_y) == t2->y_cor))
+                {
+                    piece_tracker.removeOne(t2);
+                    p2->hide();
+                    all_pieces.removeOne(p2);
+                }
             }
         }
-    }
 
-    allmoves = allmoves + " " + chessposition;
-    qDebug() << data;
+        allmoves = allmoves + " " + chessposition;
+        qDebug() << data;
+    }
 }
 
 int MainWindow::convertLetterToNumber(char letter)
@@ -172,6 +178,18 @@ void MainWindow::multiplayer_clicked()
     name->hide();
     lblname->deleteLater();
     lblname->hide();
+
+    QFile scoresFile("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/textfiles/scores.txt");
+    if (scoresFile.open(QIODevice::ReadOnly | QIODevice::Text)){
+        QTextStream stream(&scoresFile);
+        QString line = stream.readAll();
+        scoredisplay = new QLabel(this);
+        scoredisplay->setText(line);
+        scoredisplay->move(450,600);
+        scoredisplay->setGeometry(0,0,100,100);
+        scoredisplay->show();
+    }
+    scoresFile.close();
 
     playername = name->text();
 //    NewGame();
@@ -512,22 +530,25 @@ void MainWindow::NewGame()
     }
 
     welc_message = new QLabel(this);
-    welc_message->setText("Welcome, " + playername + "!\nYou are playing " + opponentname
+    welc_message->setText("Welcome, " + playername + "!\n\n\nYou are playing\n" + QString(2) +  " " + opponentname + " " + QString(2) +
                           + "\nYou are team " + team + ".\n\nGoodluck!!");
-    welc_message->move(840,115);
+    welc_message->move(850,115);
     welc_message->setFixedWidth(999);
     welc_message->setFixedHeight(100);
     welc_message->show();
 
     menustatus->hide();
 //    menustatus->deleteLater();
-//    scoredisplay->hide();
+    if (multiplayer)
+    {
+        scoredisplay->hide();
+    }
 
     QString s = QString(turn);
     status = new QLabel(this);
-    status->setText("Game status: " + s + "'s turn to play!");
+    status->setText("Game status:\n" + s + "'s turn to play!");
     status->setFixedWidth(999);
-    status->move(815,255);
+    status->move(855,255);
     status->show();
 
     gamestatus = new QLabel(this);
@@ -557,7 +578,7 @@ void MainWindow::NewGame()
     {
         QPushButton* btnReset = new QPushButton(this);
         btnReset->show();
-        btnReset->setText("Reset");
+        btnReset->setText(QString(16) + " Reset");
         btnReset->setGeometry(0,0,100,75);
         btnReset->move(845, 500);
         connect(btnReset, SIGNAL(clicked()), this, SLOT(ResetAI()));
@@ -565,14 +586,38 @@ void MainWindow::NewGame()
 
         QPushButton* btnQuit = new QPushButton(this);
         btnQuit->show();
-        btnQuit->setText("Quit");
+        btnQuit->setText(QString(17) + " Quit");
         btnQuit->setGeometry(0,0,100,75);
         btnQuit->move(845, 600);
         connect(btnQuit, SIGNAL(clicked()), this, SLOT(EndGame()));
         GUI.append(btnQuit);
+
+        QPushButton* btnbestmove = new QPushButton(this);
+        btnbestmove->show();
+        btnbestmove->setText(QString(3) + " Hint");  //3 is heart
+        btnbestmove->setGeometry(0,0,100,75);
+        btnbestmove->move(845, 400);
+        connect(btnbestmove, SIGNAL(clicked()), this, SLOT(Calcplayerbestmove()));
+        GUI.append(btnbestmove);
     }
 
     DefaultBoard();
+}
+
+void MainWindow::Calcplayerbestmove()
+{
+    if (hints != 0)
+    {
+        askbestmove = true;
+        command = "position startpos moves " + allmoves + "\ngo\n";
+        connector->writeData(command.toUtf8());
+        --hints;
+    }else{
+        status->setText("No hints left");
+        player.setMedia(QUrl::fromLocalFile("notify.wav"));
+        player.play();
+    }
+
 }
 
 void MainWindow::ResetAI()
@@ -616,13 +661,12 @@ void MainWindow::EndGame()
         if (scoresFile.open(QIODevice::ReadOnly | QIODevice::Text)){
             QTextStream stream(&scoresFile);
             QString line = stream.readAll();
-            scoredisplay = new QLabel(this);
             scoredisplay->setText(line);
             scoredisplay->move(450,600);
             scoredisplay->setGeometry(0,0,100,100);
             scoredisplay->show();
         }
-
+        scoresFile.close();
     }
     playing_game = false;
     ResetGame();
@@ -718,6 +762,8 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
         if (turn != team)
         {
             gamestatus->setText("not your turn");
+            player.setMedia(QUrl::fromLocalFile("notify.wav"));
+            player.play();
             click_counter = 0;
         }else{
             if (click_counter == 1)
@@ -737,6 +783,8 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
                         clicked_on_piece = true;
                         if(t->team != turn){
                             gamestatus->setText("not your team");
+                            player.setMedia(QUrl::fromLocalFile("notify.wav"));
+                            player.play();
                             click_counter = 0;
                             break;
                         }
@@ -763,6 +811,8 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
                         if (possible_moves.isEmpty())
                         {
                             gamestatus->setText("This piece cannot move");
+                            player.setMedia(QUrl::fromLocalFile("notify.wav"));
+                            player.play();
                             click_counter = 0;
                         }
                     }
@@ -770,6 +820,8 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
                 if (!clicked_on_piece)
                 {
                     gamestatus->setText("You did not click on piece");
+                    player.setMedia(QUrl::fromLocalFile("notify.wav"));
+                    player.play();
                     click_counter = 0;
                 }else{
                     clicked_on_piece = false;
@@ -785,6 +837,8 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
                 if (!Clicked_on_Piece(from_xcoord,from_ycoord))
                 {
                     gamestatus->setText("You did not click on piece");
+                    player.setMedia(QUrl::fromLocalFile("notify.wav"));
+                    player.play();
                 }
             }
         }
@@ -841,6 +895,8 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
             if ((!(Validmove(t->type, to_xcoord, to_ycoord))) || (!(Validpiecemove(t->team,t->type,t->num_moves,from_xcoord, from_ycoord,to_xcoord,to_ycoord))) || Check_yourself(t->team,from_xcoord, from_ycoord,to_xcoord,to_ycoord,t))
             {
                 gamestatus->setText("not valid move");
+                player.setMedia(QUrl::fromLocalFile("notify.wav"));
+                player.play();
             }else{
                     if (capture)
                     {
@@ -848,13 +904,18 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                         all_pieces[enemy_index]->hide();
                         all_pieces.removeOne(all_pieces[enemy_index]);
                         //sound capture
+                        player.setMedia(QUrl::fromLocalFile("capture.wav"));
+                        player.play();
+                    }else{
+                        player.setMedia(QUrl::fromLocalFile("move-self.wav"));
+                        player.play();
                     }
 
                     p->move(board.AssignxCoord(to_xcoord), board.AssignyCoord(to_ycoord));
                     t->x_cor = board.AssignxCoord(to_xcoord);
                     t->y_cor = board.AssignyCoord(to_ycoord);
                     if (t->num_moves<5)   //we are only interested in moves 0-2, important that it stays 1 char for transfer
-                    {++t->num_moves;}
+                    {++t->num_moves;}                   
 
                     if (kingside_castling)
                     {
@@ -902,12 +963,13 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                            if (player_is_client)
                            {
                                client_won = true;
+                               UpdateLeaderboard();
                                clientSend("endgame");
                            }else{
-                                serverSend("endgame");
                                 serv_won = true;
+                                UpdateLeaderboard();
+                                serverSend("endgame");
                            }
-                           UpdateLeaderboard();
                             EndGame();
                         }else{
                            gamestatus->setText(QString(turn) + "'s king is in check, no checkmate!");

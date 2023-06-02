@@ -25,6 +25,9 @@
 #include <vector>
 #include <random>
 
+#include <QApplication>
+#include <QMediaPlayer>
+
 typedef struct piecetracker
 {
     int x_cor = 0;
@@ -93,6 +96,10 @@ private:
     //leaderboard
     QLabel *scoredisplay;
 
+    //sound
+    QMediaPlayer player;
+
+
 private slots:
     void SetupGUI();
     void NewGame();
@@ -133,8 +140,6 @@ private slots:
     void ansno();
 
     //leaderboard
-//    int getScore(QString);
-//    void updateScore(QByteArray, int);
     void UpdateLeaderboard();
 
     //AI
@@ -146,12 +151,15 @@ private slots:
 //    void writedata();
     int convertLetterToNumber(char);
     void convertChessPosition(const QString);
+    void Calcplayerbestmove();
 
 private:
     StockfishConnector* connector;
     QPushButton *AI;
     QPushButton *btnwrite;
     QString allmoves, chessposition, command, position;
+    bool askbestmove = false;
+    int hints = 3;
 };
 
 #endif // MAINWINDOW_H
