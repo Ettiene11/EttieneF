@@ -733,7 +733,7 @@ void MainWindow::EndGame()
             QString line = stream.readAll();
             scoredisplay->setText(line);
             scoredisplay->move(450,600);
-            scoredisplay->setGeometry(0,0,100,100);
+            scoredisplay->setGeometry(425,300,500,500);
             scoredisplay->show();
         }
         scoresFile.close();
