@@ -88,6 +88,12 @@ void MainWindow::SetupGUI()
 
     menustatus = new QLabel(this);
     menustatus->setGeometry(0,0,200,50);
+
+    for (int k=0; k<=63 ; ++k)
+    {
+        possiblexmoves[k] = 0;
+        possibleymoves[k] = 0;
+    }
 }
 
 void MainWindow::singleplayer_clicked()
@@ -131,7 +137,10 @@ void MainWindow::AIreceive(QByteArray data)
         gamestatus->show();
         board board;
         //move piece
-        convertChessPosition(chessposition);
+        if (data != "none")
+        {
+           convertChessPosition(chessposition);
+        }
 
         QVectorIterator<piecetracker*> tracker2(piece_tracker);
         QVectorIterator<QLabel*> piece2(all_pieces);
@@ -146,7 +155,7 @@ void MainWindow::AIreceive(QByteArray data)
                 ydelta =(abs(board.AssignyCoord(AIfrom_y)-board.AssignyCoord(AIto_y)))/100;
                 newx = board.AssignxCoord(AIfrom_x);
                 newy = board.AssignyCoord(AIfrom_y);
-                if (t2->num_moves<5)   //we are only interested in moves 0-2, important that it stays 1 char for transfer
+                if (t2->num_moves<9)   //we are only interested in moves 0-2, important that it stays 1 char for transfer
                 {++t2->num_moves;}
             }
         }
@@ -207,7 +216,6 @@ void MainWindow::moveAIpiece()
                player.setMedia(QUrl::fromLocalFile("move-self.wav"));
                player.play();
            }
-           break;
         }
     }
 }
@@ -614,7 +622,7 @@ void MainWindow::NewGame()
     status->show();
 
     gamestatus = new QLabel(this);
-    gamestatus->setGeometry(0,0,200,50);
+    gamestatus->setGeometry(100,100,200,100);
     gamestatus->move(835,300);
     gamestatus->show();
 
@@ -852,26 +860,86 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
                             break;
                         }
 
-                        for (int i = 1; i <= 8; ++i)
+//                        for (int i = 1; i <= 8; ++i)
+//                        {
+//                            for (int j = 1; j <= 8; ++j)
+//                            {
+//                                if ((Validmove(t->type, i, j)) && (Validpiecemove(t->team,t->type,t->num_moves,from_xcoord, from_ycoord,i,j)))
+//                                {
+//                                    if (!Check_yourself(t->team,from_xcoord, from_ycoord,i,j,t))
+//                                    {
+//                                        QLabel* new_move = new QLabel(this);
+//                                        new_move->setPixmap(QPixmap(":img/possible_move.png").scaled(100,100));
+//                                        new_move->setFixedSize(100, 100);
+//                                        new_move->show();
+//                                        new_move->move(board.AssignxCoord(i), board.AssignyCoord(j));
+//                                        possible_moves.append(new_move);
+//                                    }
+//                                }
+//                            }
+//                        }
+                        for (int k=0; k<=63 ; ++k)
                         {
-                            for (int j = 1; j <= 8; ++j)
+                            possiblexmoves[k] = 0;
+                            possibleymoves[k] = 0;
+                            ogpossiblexmoves[k] = 0;
+                            ogpossibleymoves[k] = 0;
+                        }
+
+                        Getboundaries(t->team,from_xcoord,from_ycoord);
+                        if (t->type == 'p')
+                        {
+                            Calcpawnpossiblemoves(t->team, t->num_moves, from_xcoord, from_ycoord,
+                                                   vertical_up_boundary, vertical_down_boundary, right_up_diagonal_boundary, left_up_diagonal_boundary,
+                                                   right_down_diagonal_boundary, left_down_diagonal_boundary);
+                        }
+                        if (t->type == 'n')
+                        {
+                            Calcknightpossiblemoves(from_xcoord,from_ycoord);
+                        }
+                        if (t->type == 'r')
+                        {
+                            Calcrookpossiblemoves(from_xcoord, from_ycoord, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary);
+                        }
+                        if (t->type == 'b')
+                        {
+                            Calcbishoppossiblemoves(from_xcoord,from_ycoord,right_up_diagonal_boundary,left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary);
+                        }
+                        if (t->type == 'q')
+                        {
+                            Calcqueenpossiblemoves(from_xcoord, from_ycoord, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary,right_up_diagonal_boundary,left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary);
+                        }
+                        if (t->type == 'k')
+                        {
+                            Calckingpossiblemoves(t->num_moves, from_xcoord, from_ycoord, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary,right_up_diagonal_boundary,left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary);
+                        }
+                        //all other pieces here
+                        for (int i = 0; i<= 63; ++i)
+                        {
+                            ogpossiblexmoves[i] = possiblexmoves[i];
+                            ogpossibleymoves[i] = possibleymoves[i];
+                        }
+                        int counter = 0;
+                        for (int i = 0; i <= 63; ++i)
+                        {
+                            if (ogpossiblexmoves[i] == 0)
                             {
-                                if ((Validmove(t->type, i, j)) && (Validpiecemove(t->team,t->type,t->num_moves,from_xcoord, from_ycoord,i,j)))
+                                break;
+                            }else{
+                                if ((!Check_yourself(t->team,from_xcoord, from_ycoord,ogpossiblexmoves[i],ogpossibleymoves[i],t)) && (Validmove(t->type,ogpossiblexmoves[i],ogpossibleymoves[i])))
                                 {
-                                    if (!Check_yourself(t->team,from_xcoord, from_ycoord,i,j,t))
-                                    {
-                                        QLabel* new_move = new QLabel(this);
-                                        new_move->setPixmap(QPixmap(":img/possible_move.png").scaled(100,100));
-                                        new_move->setFixedSize(100, 100);
-                                        new_move->show();
-                                        new_move->move(board.AssignxCoord(i), board.AssignyCoord(j));
-                                        possible_moves.append(new_move);
-                                    }
+                                    ++counter;
+                                    QLabel* new_move = new QLabel(this);
+                                    new_move->setPixmap(QPixmap(":img/possible_move.png").scaled(100,100));
+                                    new_move->setFixedSize(100, 100);
+                                    new_move->show();
+                                    new_move->move(board.AssignxCoord(ogpossiblexmoves[i]), board.AssignyCoord(ogpossibleymoves[i]));
+                                    possible_moves.append(new_move);
                                 }
                             }
                         }
 
-                        if (possible_moves.isEmpty())
+                        if (counter == 0)      //can use possible_moves.isemty()
                         {
                             gamestatus->setText("This piece cannot move");
                             player.setMedia(QUrl::fromLocalFile("notify.wav"));
@@ -893,6 +961,7 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
 
             if (click_counter == 2)
             {
+                board board;
                 to_xcoord = GetxPosition(e->x());
                 to_ycoord = GetyPosition(e->y());
                 click_counter = 0;
@@ -945,6 +1014,7 @@ void MainWindow::Makepiece(QString text, char type, char team, int x, int y, int
 bool MainWindow::Clicked_on_Piece(int x, int y)
 {
     board board;
+
     QVectorIterator<piecetracker*> tracker(piece_tracker);
     QVectorIterator<QLabel*> piece(all_pieces);
 
@@ -977,10 +1047,10 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                     p->move(board.AssignxCoord(to_xcoord), board.AssignyCoord(to_ycoord));
                     t->x_cor = board.AssignxCoord(to_xcoord);
                     t->y_cor = board.AssignyCoord(to_ycoord);
-                    if (t->num_moves<5)   //we are only interested in moves 0-2, important that it stays 1 char for transfer
+                    if (t->num_moves<9)   //we are only interested in moves 0-2, important that it stays 1 char for transfer
                     {++t->num_moves;}                   
 
-                    if (kingside_castling)
+                    if ((kingside_castling) && (t->x_cor == board.AssignxCoord(7)))
                     {
                         kingside_castling = false;
                         castling_rook_lbl->move(board.AssignxCoord(to_xcoord-1), board.AssignyCoord(to_ycoord));  //move rook
@@ -988,7 +1058,7 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                         castling_rook_pt->y_cor = board.AssignyCoord(to_ycoord);
                         ++castling_rook_pt->num_moves;
 
-                    }else if (queenside_castling)
+                    }else if ((queenside_castling) && (t->x_cor == board.AssignxCoord(3)))
                     {
                         queenside_castling = false;
                         castling_rook_lbl->move(board.AssignxCoord(to_xcoord+1), board.AssignyCoord(to_ycoord));  //move rook
@@ -1002,8 +1072,12 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                     {
                         if (t->team == 'w')
                         {
-                           p->setText("WQ");
-                        }else{p->setText("BQ");}
+                            p->setPixmap(QPixmap(":img/w_queen").scaled(100,100));
+                            p->show();
+                        }else{
+                            p->setPixmap(QPixmap(":img/b_queen").scaled(100,100));
+                            p->show();
+                        }
                         t->type = 'q';
                     }
 
@@ -1020,9 +1094,11 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                     if (Check_opponent(t->x_cor, t->y_cor, t))
                     {
                         gamestatus->setText(QString(turn) + "'s king is in check.\nChecking for possible checkmate...");
-                        if (Checkmate())
+                        gamestatus->show();
+                        if (Checkmate(t->team))  //team = your team, check if enemy is in checkmate
                         {
                         gamestatus->setText("Checkmate, " + QString(t->team) + " won!");
+                        gamestatus->show();
                            if (player_is_client)
                            {
                                client_won = true;
@@ -1036,6 +1112,7 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                             EndGame();
                         }else{
                            gamestatus->setText(QString(turn) + "'s king is in check, no checkmate!");
+                           gamestatus->show();
                         }
                     }
 
@@ -1116,7 +1193,7 @@ QString MainWindow::convertCoordinatesToChessPosition(int from_x, int from_y, in
     return position;                             //format e2e4
 }
 
-bool MainWindow::Validmove(char type, int x, int y)  //check if piece moved into open space or onto enemy team's piece
+bool MainWindow::Validmove(char type, int x, int y)  //check if piece moved into open space or onto enemy team's piece or in En_passant position
 {
     board board;
     QVectorIterator<piecetracker*> tracker(piece_tracker);
@@ -1135,9 +1212,53 @@ bool MainWindow::Validmove(char type, int x, int y)  //check if piece moved into
             }else{
                 if ((PossibleCastling(t)) && (type == 'k'))
                 {
+                    if (t->num_moves == 0)
+                    {
+                        QVectorIterator<QLabel*> piece2(all_pieces);
+                        QVectorIterator<piecetracker*> tracker2(piece_tracker);
+                        while (tracker2.hasNext())
+                        {
+                            piecetracker* t2 = tracker2.next();
+                            QLabel* p2 = piece2.next();
+                            if ((GetxPosition(t2->x_cor) == x) && (GetyPosition(t2->y_cor) == y))
+                            {
+                                if ((x == 1) && (horizontal_left_boundary == 3) && (t2->type == 'r') && (t2->team == turn))
+                                {
+                                    to_xcoord = to_xcoord + 2;
+                                    queenside_castling = true;
+                                    castling_rook_pt = t2;
+                                    castling_rook_lbl = p2;
+                                    capture = false;
+                                    return true;
+                                }else if ((x == 8) && (horizontal_right_boundary == 2) && (t2->type == 'r') && (t2->team == turn))
+                                {
+                                    to_xcoord = to_xcoord - 1;
+                                    kingside_castling = true;
+                                    castling_rook_pt = t2;
+                                    castling_rook_lbl = p2;
+                                    capture = false;
+                                    return true;
+                                }
+                            }
+                        }
+                    }
                     capture = false;
                     return true;
                 }else{return false;}
+            }
+        }
+        //En_passant
+        if ((((GetyPosition(t->y_cor) == 5) && (team == 'w')) || ((GetyPosition(t->y_cor) == 4) && (team == 'b'))) && (t->num_moves == 1))
+        {
+            if (((GetxPosition(t->x_cor) == x) && ((GetyPosition(t->y_cor)-y) == 1) && (team == 'b')) ||
+                    ((GetxPosition(t->x_cor) == x) && (y-(GetyPosition(t->y_cor)) == 1) && (team == 'w')))
+            {
+                if ((abs(from_xcoord-GetxPosition(t->x_cor)) == 1) && (from_ycoord == GetyPosition(t->y_cor)))
+                {
+                    capture = true;
+                    enemy_index = piece_tracker.indexOf(t);
+                    return true;
+                }
             }
         }
     }
@@ -1148,28 +1269,77 @@ bool MainWindow::Validmove(char type, int x, int y)  //check if piece moved into
 
 bool MainWindow::Validpiecemove(char team, char type, int num_moves, int from_x, int from_y, int x, int y) //check if specific piece has valid move based on its specific characteristical moves
 {
-    Getboundaries(from_x, from_y);
-    Pawn pawn;
-    Knight knight;
-    Rook rook;
-    Bishop bishop;
-    Queen queen;
-    King king;
-    switch (type) {
-    case 'p' :
-        if (En_passant(team,from_x, from_y, x, y)){return true;}
-        if (pawn.ValidMove(team, num_moves, capture, from_x, from_y, x, y, vertical_up_boundary, vertical_down_boundary)) {return true;} break;
-    case 'n' :
-        if (knight.ValidMove(team, from_x, from_y, x, y)) {return true;} break;
-    case 'r' :
-        if (rook.ValidMove(team, from_x, from_y, x, y, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary)) {return true;} break;
-    case 'b' :
-        if (bishop.ValidMove(team, from_x, from_y, x, y, right_up_diagonal_boundary, left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary)) {return true;} break;
-    case 'q' :
-        if (queen.ValidMove(team, from_x, from_y, x, y, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary,right_up_diagonal_boundary, left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary)) {return true;} break;
-    case 'k' :
-        if (Castling(num_moves, horizontal_left_boundary, horizontal_right_boundary, x, y)) {return true;}
-        if (king.ValidMove(team, check, from_x, from_y, x, y)) {return true;} break;
+    board board;
+    for (int k=0; k<=63 ; ++k)
+    {
+        possiblexmoves[k] = 0;
+        possibleymoves[k] = 0;
+//        ogpossiblexmoves[k] = 0;
+//        ogpossibleymoves[k] = 0;
+    }
+//    Getboundaries(team, from_x, from_y);
+//    Pawn pawn;
+//    Knight knight;
+//    Rook rook;
+//    Bishop bishop;
+//    Queen queen;
+//    King king;
+//    switch (type) {
+//    case 'p' :
+//        if (En_passant(team,from_x, from_y, x, y)){return true;}
+////        if (pawn.ValidMove(team, num_moves, capture, from_x, from_y, x, y, vertical_up_boundary, vertical_down_boundary)) {return true;} break;
+//    case 'n' :
+//        if (knight.ValidMove(team, from_x, from_y, x, y)) {return true;} break;
+//    case 'r' :
+//        if (rook.ValidMove(team, from_x, from_y, x, y, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary)) {return true;} break;
+//    case 'b' :
+//        if (bishop.ValidMove(team, from_x, from_y, x, y, right_up_diagonal_boundary, left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary)) {return true;} break;
+//    case 'q' :
+//        if (queen.ValidMove(team, from_x, from_y, x, y, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary,right_up_diagonal_boundary, left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary)) {return true;} break;
+//    case 'k' :
+//        if (Castling(num_moves, horizontal_left_boundary, horizontal_right_boundary, x, y)) {return true;}
+//        if (king.ValidMove(team, check, from_x, from_y, x, y)) {return true;} break;
+//    }
+//    return false;
+    Getboundaries(team,from_x,from_y);
+    if (type == 'p')
+    {
+        Calcpawnpossiblemoves(team, num_moves, from_x, from_y,
+                               vertical_up_boundary, vertical_down_boundary, right_up_diagonal_boundary, left_up_diagonal_boundary,
+                               right_down_diagonal_boundary, left_down_diagonal_boundary);
+    }
+    if (type == 'n')
+    {
+        Calcknightpossiblemoves(from_x,from_y);
+    }
+    if (type == 'r')
+    {
+        Calcrookpossiblemoves(from_x, from_y, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary);
+    }
+    if (type == 'b')
+    {
+        Calcbishoppossiblemoves(from_x,from_y,right_up_diagonal_boundary,left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary);
+    }
+    if (type == 'q')
+    {
+        Calcqueenpossiblemoves(from_x, from_y, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary,right_up_diagonal_boundary,left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary);
+    }
+    if (type == 'k')
+    {
+        Calckingpossiblemoves(num_moves, from_x, from_y, vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary,right_up_diagonal_boundary,left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary);
+    }
+    //all other pieces
+    for (int i = 0; i <= 63; ++i)
+    {
+        if (possiblexmoves[i] == 0)
+        {
+            break;
+        }else{
+                if ((possiblexmoves[i] == x) && (possibleymoves[i] == y))
+                {
+                    return true;
+                }
+            }
     }
     return false;
 }
@@ -1225,10 +1395,11 @@ void MainWindow::DefaultBoard()
     Makepiece("b_king.png",'k','b',board.AssignxCoord(5),board.AssignyCoord(8),0);
 }
 
-void MainWindow::Getboundaries(int from_x, int from_y)
+void MainWindow::Getboundaries(char team, int from_x, int from_y)
 {
     int vert_up_min = 999, vert_down_min = 999, hort_left_min = 999, hort_right_min = 999,
-            right_up_diagonal_bound = 999, right_down_diagonal_bound = 999, left_up_diagonal_bound = 999, left_down_diagonal_bound = 999;
+            right_up_diagonal_bound = 999, right_down_diagonal_bound = 999, left_up_diagonal_bound = 999, left_down_diagonal_bound = 999,
+            distance;
     QVectorIterator<piecetracker*> tracker(piece_tracker);
     while(tracker.hasNext())
     {
@@ -1236,22 +1407,33 @@ void MainWindow::Getboundaries(int from_x, int from_y)
         //vertical
         if (GetxPosition(t->x_cor) == from_x)
         {
-            //vert_up
-            if (GetyPosition(t->y_cor) > from_y)
-            {
-                int distance = abs(GetyPosition(t->y_cor)-from_y);
-                if (vert_up_min>distance)
-                {
-                    vert_up_min = distance;
-                }
-            }
             //vert_down
             if (GetyPosition(t->y_cor) < from_y)
             {
-                int distance = abs(GetyPosition(t->y_cor)-from_y);
+                if (team == t->team)
+                {
+                   distance = abs(GetyPosition(t->y_cor)-from_y)-1;
+                }else{
+                   distance = abs(GetyPosition(t->y_cor)-from_y);
+                }
+                 //if not enemy
                 if (vert_down_min>distance)
                 {
                     vert_down_min = distance;
+                }
+            }
+            //vert_up
+            if (GetyPosition(t->y_cor) > from_y)
+            {
+                if (team == t->team)
+                {
+                   distance = abs(GetyPosition(t->y_cor)-from_y)-1;
+                }else{
+                   distance = abs(GetyPosition(t->y_cor)-from_y);
+                }
+                if (vert_up_min>distance)
+                {
+                    vert_up_min = distance;
                 }
             }
         }
@@ -1261,7 +1443,13 @@ void MainWindow::Getboundaries(int from_x, int from_y)
             //hort_right
             if (GetxPosition(t->x_cor) > from_x)
             {
-                int distance = abs(GetxPosition(t->x_cor)-from_x);
+                if (team == t->team)
+                {
+                   distance = abs(GetxPosition(t->x_cor)-from_x)-1;
+                }else{
+                   distance = abs(GetxPosition(t->x_cor)-from_x);
+                }
+
                 if (hort_right_min>distance)
                 {
                     hort_right_min = distance;
@@ -1270,7 +1458,13 @@ void MainWindow::Getboundaries(int from_x, int from_y)
             //hort_left
             if (GetxPosition(t->x_cor) < from_x)
             {
-                int distance = abs(GetxPosition(t->x_cor)-from_x);
+                if (team == t->team)
+                {
+                   distance = abs(GetxPosition(t->x_cor)-from_x)-1;
+                }else{
+                   distance = abs(GetxPosition(t->x_cor)-from_x);
+                }
+
                 if (hort_left_min>distance)
                 {
                     hort_left_min = distance;
@@ -1280,40 +1474,60 @@ void MainWindow::Getboundaries(int from_x, int from_y)
         //diagonal
         if ((abs(GetyPosition(t->y_cor) - from_y)) == (abs(GetxPosition(t->x_cor) - from_x)))
         {
-            //right_up
-            if (((GetyPosition(t->y_cor) - from_y) > 0) && ((GetxPosition(t->x_cor) - from_x) > 0))
+            //right_down
+            if (((from_y - GetyPosition(t->y_cor)) > 0) && ((GetxPosition(t->x_cor) - from_x) > 0))
             {
-                int distance = abs(GetxPosition(t->x_cor)-from_x);
-                if (right_up_diagonal_bound>distance)
+                if (team == t->team)
                 {
-                    right_up_diagonal_bound = distance;
+                   distance = abs(GetxPosition(t->x_cor)-from_x)-1;
+                }else{
+                   distance = abs(GetxPosition(t->x_cor)-from_x);
                 }
-            }
-            //left_up
-            if (((GetyPosition(t->y_cor) - from_y) > 0) && ((from_x - GetxPosition(t->x_cor)) > 0))
-            {
-                int distance = abs(GetxPosition(t->x_cor)-from_x);
-                if (left_up_diagonal_bound>distance)
+                if (right_down_diagonal_bound>distance)
                 {
-                    left_up_diagonal_bound = distance;
+                    right_down_diagonal_bound = distance;
                 }
             }
             //left_down
             if (((from_y - GetyPosition(t->y_cor)) > 0) && ((from_x - GetxPosition(t->x_cor)) > 0))
             {
-                int distance = abs(GetxPosition(t->x_cor)-from_x);
+                if (team == t->team)
+                {
+                   distance = abs(GetxPosition(t->x_cor)-from_x)-1;
+                }else{
+                   distance = abs(GetxPosition(t->x_cor)-from_x);
+                }
                 if (left_down_diagonal_bound>distance)
                 {
                     left_down_diagonal_bound = distance;
                 }
             }
-            //right_down
-            if (((from_y - GetyPosition(t->y_cor)) > 0) && ((GetxPosition(t->x_cor) - from_x) > 0))
+            //left_up
+            if (((GetyPosition(t->y_cor) - from_y) > 0) && ((from_x - GetxPosition(t->x_cor)) > 0))
             {
-                int distance = abs(GetxPosition(t->x_cor)-from_x);
-                if (right_down_diagonal_bound>distance)
+                if (team == t->team)
                 {
-                    right_down_diagonal_bound = distance;
+                   distance = abs(GetxPosition(t->x_cor)-from_x)-1;
+                }else{
+                   distance = abs(GetxPosition(t->x_cor)-from_x);
+                }
+                if (left_up_diagonal_bound>distance)
+                {
+                    left_up_diagonal_bound = distance;
+                }
+            }
+            //right_up
+            if (((GetyPosition(t->y_cor) - from_y) > 0) && ((GetxPosition(t->x_cor) - from_x) > 0))
+            {
+                if (team == t->team)
+                {
+                   distance = abs(GetxPosition(t->x_cor)-from_x)-1;
+                }else{
+                   distance = abs(GetxPosition(t->x_cor)-from_x);
+                }
+                if (right_up_diagonal_bound>distance)
+                {
+                    right_up_diagonal_bound = distance;
                 }
             }
         }
@@ -1328,11 +1542,61 @@ void MainWindow::Getboundaries(int from_x, int from_y)
     left_down_diagonal_boundary = left_down_diagonal_bound;
 }
 
+bool MainWindow::Checkcapture(char team, int to_x, int to_y)
+{
+    board board;
+    QVectorIterator<piecetracker*> tracker(piece_tracker);
+    while (tracker.hasNext())
+    {
+        piecetracker *t = tracker.next();
+
+        if ((team != t->team) && (board.AssignxCoord(to_x) == t->x_cor) && (board.AssignyCoord(to_y) == t->y_cor))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool MainWindow::Check_yourself(char team, int from_x, int from_y, int to_x, int to_y, piecetracker* piecetrack)
 {
     board board;
-    bool check_opponent = false, capture_state;
-    capture_state = capture;
+    bool check_opponent = false;
+//    capture_state = Checkcapture(team,to_x,to_y);
+
+//    if (kingside_castling)
+//    {
+//        to_x = 7;
+//        to_y = 1;
+//    }
+
+    if (possiblekingside_castling)
+    {
+        castling_rook_pt->x_cor = board.AssignxCoord(to_x-1);   //move temporarily
+        castling_rook_pt->y_cor = board.AssignyCoord(to_y);
+//        if (team == 'w')
+//        {
+//            king_xpos = 5;      //coords of my king
+//            king_ypos = 1;
+//        }else{
+//            king_xpos = 5;      //coords of my king
+//            king_ypos = 8;
+//        }
+
+    }
+    if (possiblequeenside_castling)
+    {
+        castling_rook_pt->x_cor = board.AssignxCoord(to_x+1);   //move temporarily
+        castling_rook_pt->y_cor = board.AssignyCoord(to_y);
+//        if (team == 'w')
+//        {
+//            king_xpos = 5;      //coords of my king
+//            king_ypos = 1;
+//        }else{
+//            king_xpos = 5;      //coords of my king
+//            king_ypos = 8;
+//        }
+    }
 
     piecetrack->x_cor = board.AssignxCoord(to_x);   //move temporarily
     piecetrack->y_cor = board.AssignyCoord(to_y);
@@ -1346,7 +1610,7 @@ bool MainWindow::Check_yourself(char team, int from_x, int from_y, int to_x, int
         {
             if (t->team == team)
             {
-                king_xpos = t->x_cor;
+                king_xpos = t->x_cor;      //coords of my king
                 king_ypos = t->y_cor;
                 break;
             }
@@ -1357,7 +1621,7 @@ bool MainWindow::Check_yourself(char team, int from_x, int from_y, int to_x, int
     while (tracker.hasNext())
     {
         piecetracker *t = tracker.next();
-        if ((capture == true) && (t == piece_tracker[enemy_index]))
+        if ((team != t->team) && (board.AssignxCoord(to_x) == t->x_cor) && (board.AssignyCoord(to_y) == t->y_cor))
         {
             check_opponent = false;
         }else{
@@ -1375,9 +1639,20 @@ bool MainWindow::Check_yourself(char team, int from_x, int from_y, int to_x, int
         }
     }
 
+    if (possiblekingside_castling)
+    {
+        castling_rook_pt->x_cor = board.AssignxCoord(8);   //move temporarily
+        castling_rook_pt->y_cor = board.AssignyCoord(1);
+    }
+    if (possiblequeenside_castling)
+    {
+        castling_rook_pt->x_cor = board.AssignxCoord(1);   //move temporarily
+        castling_rook_pt->y_cor = board.AssignyCoord(1);
+    }
+
     piecetrack->x_cor = board.AssignxCoord(from_x);
     piecetrack->y_cor = board.AssignyCoord(from_y);
-    capture = capture_state;
+//    capture = capture_state;
     return check_opponent;
 }
 
@@ -1395,7 +1670,7 @@ bool MainWindow::Check_opponent(int from_x, int from_y, piecetracker* piecetrack
         {
             if (t->team != piecetrack->team)
             {
-                king_xpos = t->x_cor;
+                king_xpos = t->x_cor;            //ander team se king
                 king_ypos = t->y_cor;
                 break;
             }
@@ -1413,48 +1688,163 @@ bool MainWindow::Check_opponent(int from_x, int from_y, piecetracker* piecetrack
     }
 }
 
-bool MainWindow::Checkmate()
+bool MainWindow::Checkmate(char team)
 {
+//    QVectorIterator<piecetracker*> tracker(piece_tracker);
+//    while (tracker.hasNext())
+//    {
+//        piecetracker *pt = tracker.next();
+//        if (pt->team == turn)
+//        {
+//            for (int i = 1; i <= 8; ++i)
+//            {
+//                for (int j = 1; j <= 8; ++j)
+//                {
+//                    if ((Validmove(pt->type, i, j)) && (Validpiecemove(pt->team,pt->type,pt->num_moves,GetxPosition(pt->x_cor), GetyPosition(pt->y_cor),i,j)))
+//                    {
+//                        if (!Check_yourself(pt->team,GetxPosition(pt->x_cor),GetyPosition(pt->y_cor),i,j,pt))
+//                        {
+//                            return false;
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+
+    int temp_ogpossiblexmoves[64];
+    int temp_ogpossibleymoves[64];
     QVectorIterator<piecetracker*> tracker(piece_tracker);
     while (tracker.hasNext())
     {
         piecetracker *pt = tracker.next();
-        if (pt->team == turn)
+        if (pt->team != team)  //check if enemy has any moves
         {
-            for (int i = 1; i <= 8; ++i)
+            for (int k=0; k<=63 ; ++k)
             {
-                for (int j = 1; j <= 8; ++j)
+                possiblexmoves[k] = 0;
+                possibleymoves[k] = 0;
+                temp_ogpossiblexmoves[k] = 0;
+                temp_ogpossibleymoves[k] = 0;
+            }
+            Getboundaries(pt->team,GetxPosition(pt->x_cor),GetyPosition(pt->y_cor));
+            if (pt->type == 'p')
+            {
+                Calcpawnpossiblemoves(pt->team, pt->num_moves, GetxPosition(pt->x_cor), GetyPosition(pt->y_cor),
+                                       vertical_up_boundary, vertical_down_boundary, right_up_diagonal_boundary, left_up_diagonal_boundary,
+                                       right_down_diagonal_boundary, left_down_diagonal_boundary);
+            }
+            if (pt->type == 'n')
+            {
+                Calcknightpossiblemoves(GetxPosition(pt->x_cor),GetyPosition(pt->y_cor));
+            }
+            if (pt->type == 'r')
+            {
+                Calcrookpossiblemoves(GetxPosition(pt->x_cor), GetyPosition(pt->y_cor), vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary);
+            }
+            if (pt->type == 'b')
+            {
+                Calcbishoppossiblemoves(GetxPosition(pt->x_cor),GetyPosition(pt->y_cor),right_up_diagonal_boundary,left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary);
+            }
+            if (pt->type == 'q')
+            {
+                Calcqueenpossiblemoves(GetxPosition(pt->x_cor), GetyPosition(pt->y_cor), vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary,right_up_diagonal_boundary,left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary);
+            }
+            if (pt->type == 'k')
+            {
+                Calckingpossiblemoves(pt->num_moves, GetxPosition(pt->x_cor), GetyPosition(pt->y_cor), vertical_up_boundary, vertical_down_boundary, horizontal_left_boundary, horizontal_right_boundary,right_up_diagonal_boundary,left_up_diagonal_boundary, right_down_diagonal_boundary, left_down_diagonal_boundary);
+            }
+            //all other pieces
+            for (int k=0; k<=63 ; ++k)
+            {
+                temp_ogpossiblexmoves[k] = possiblexmoves[k];
+                temp_ogpossibleymoves[k] = possibleymoves[k];
+            }
+            for (int i = 0; i <= 63; ++i)
+            {
+                if (temp_ogpossiblexmoves[i] == 0)
                 {
-                    if ((Validmove(pt->type, i, j)) && (Validpiecemove(pt->team,pt->type,pt->num_moves,GetxPosition(pt->x_cor), GetyPosition(pt->y_cor),i,j)))
+                    break;
+                }else{
+                    if (!Check_yourself(pt->team,GetxPosition(pt->x_cor), GetyPosition(pt->y_cor),temp_ogpossiblexmoves[i],temp_ogpossibleymoves[i],pt))
                     {
-                        if (!Check_yourself(pt->team,GetxPosition(pt->x_cor),GetyPosition(pt->y_cor),i,j,pt))
-                        {
-                            return false;
-                        }
+                        return false;
                     }
                 }
             }
         }
     }
-
     return true;
 }
 
-bool MainWindow::En_passant(char team, int from_x, int from_y, int to_x, int to_y)
+bool MainWindow::L_En_passant(char team, int from_x, int from_y)
 {
+    board board;
     QVectorIterator<piecetracker*> tracker(piece_tracker);
     while (tracker.hasNext())
     {
         piecetracker* t = tracker.next();
-        if ((((GetyPosition(t->y_cor) == 5) && (team == 'w')) || ((GetyPosition(t->y_cor) == 4) && (team == 'b'))) && (t->num_moves == 1))
+        if (team == 'w')
         {
-            if (((GetxPosition(t->x_cor) == to_x) && ((GetyPosition(t->y_cor)-to_y) == 1) && (team == 'b')) ||
-                    ((GetxPosition(t->x_cor) == to_x) && (to_y-(GetyPosition(t->y_cor)) == 1) && (team == 'w')))
+            if ((t->type == 'p') && (t->team != team) && (t->num_moves == 1) && (t->y_cor == board.AssignyCoord(5)))
             {
-                if ((abs(from_x-GetxPosition(t->x_cor)) == 1) && (from_y == GetyPosition(t->y_cor)))
+                if ((t->x_cor == board.AssignxCoord(from_x-1)) && (t->y_cor == board.AssignyCoord(from_y)))
                 {
-                    capture = true;
-                    enemy_index = piece_tracker.indexOf(t);
+                    return true;
+                }
+            }
+        }
+        if (team == 'b')
+        {
+            if ((t->type == 'p') && (t->team != team) && (t->num_moves == 1) && (t->y_cor == board.AssignyCoord(4)))
+            {
+                if ((t->x_cor == board.AssignxCoord(from_x-1)) && (t->y_cor == board.AssignyCoord(from_y)))
+                {
+                    return true;
+                }
+            }
+        }
+//        if ((((GetyPosition(t->y_cor) == 5) && (team == 'w')) || ((GetyPosition(t->y_cor) == 4) && (team == 'b'))) && (t->num_moves == 1))
+//        {
+//            if (((GetxPosition(t->x_cor) == to_x) && ((GetyPosition(t->y_cor)-to_y) == 1) && (team == 'b')) ||
+//                    ((GetxPosition(t->x_cor) == to_x) && (to_y-(GetyPosition(t->y_cor)) == 1) && (team == 'w')))
+//            {
+//                if ((abs(from_x-GetxPosition(t->x_cor)) == 1) && (from_y == GetyPosition(t->y_cor)))
+//                {
+//                    capture = true;
+//                    enemy_index = piece_tracker.indexOf(t);
+//                    return true;
+//                }
+//            }
+//        }
+    }
+    return false;
+}
+
+bool MainWindow::R_En_passant(char team, int from_x, int from_y)
+{
+    board board;
+    QVectorIterator<piecetracker*> tracker(piece_tracker);
+    while (tracker.hasNext())
+    {
+        piecetracker* t = tracker.next();
+
+        if (team == 'w')
+        {
+            if ((t->type == 'p') && (t->team != team) && (t->num_moves == 1) && (t->y_cor == board.AssignyCoord(5)))
+            {
+                if ((t->x_cor == board.AssignxCoord(from_x+1)) && (t->y_cor == board.AssignyCoord(from_y)))
+                {
+                    return true;
+                }
+            }
+        }
+        if (team == 'b')
+        {
+            if ((t->type == 'p') && (t->team != team) && (t->num_moves == 1) && (t->y_cor == board.AssignyCoord(4)))
+            {
+                if ((t->x_cor == board.AssignxCoord(from_x+1)) && (t->y_cor == board.AssignyCoord(from_y)))
+                {
                     return true;
                 }
             }
@@ -1484,19 +1874,25 @@ bool MainWindow::Castling(int num_moves, int left_bound, int right_bound, int to
             QLabel* p = piece.next();
             if ((GetxPosition(t->x_cor) == to_x) && (GetyPosition(t->y_cor) == to_y))
             {
-                if ((to_x == 1) && (left_bound == 4) && (t->type == 'r') && (t->team == turn))
+                if ((to_x == 1) && (left_bound == 3) && (t->type == 'r') && (t->team == turn))
                 {
-                    to_xcoord = to_xcoord + 2;
-                    queenside_castling = true;
-                    castling_rook_pt = t;
-                    castling_rook_lbl = p;
+//                    if (click_counter == 0)
+//                    {
+//                        to_xcoord = to_xcoord + 2;
+                        queenside_castling = true;
+                        castling_rook_pt = t;
+                        castling_rook_lbl = p;
+//                    }
                     return true;
-                }else if ((to_x == 8) && (right_bound == 3) && (t->type == 'r') && (t->team == turn))
+                }else if ((to_x == 8) && (right_bound == 2) && (t->type == 'r') && (t->team == turn))
                 {
-                    to_xcoord = to_xcoord - 1;
-                    kingside_castling = true;
-                    castling_rook_pt = t;
-                    castling_rook_lbl = p;
+//                    if (click_counter == 0)
+//                    {
+//                        to_xcoord = to_xcoord - 1;
+                        kingside_castling = true;
+                        castling_rook_pt = t;
+                        castling_rook_lbl = p;
+//                    }
                     return true;
                 }
             }

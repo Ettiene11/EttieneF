@@ -46,8 +46,20 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void Makepiece(QString, char, char, int, int, int);
-    void Getboundaries(int, int);
+    void Getboundaries(char, int, int);
     bool playing_game = false;
+    //game
+    int possiblexmoves[64];
+    int possibleymoves[64];
+    int ogpossiblexmoves[64];
+    int ogpossibleymoves[64];
+
+    void Calcpawnpossiblemoves(char, int, int, int, int, int, int, int, int, int);
+    void Calcknightpossiblemoves(int, int);
+    void Calcrookpossiblemoves(int, int, int, int, int, int);
+    void Calcbishoppossiblemoves(int, int, int, int, int, int);
+    void Calcqueenpossiblemoves(int, int, int, int, int, int, int, int, int, int);
+    void Calckingpossiblemoves(int, int, int, int, int, int, int, int, int, int, int);
 
 protected:
     void mousePressEvent(QMouseEvent *event);
@@ -74,7 +86,8 @@ private:
     AIto_x, AIto_y, AIfrom_x, AIfrom_y;
     char turn = 'w', clicked_team, team;
     bool clicked_on_piece = false, capture = false, check = false, checkmate = false, queenside_castling = false, kingside_castling = false,
-    player_is_server = false, player_is_client = false, multiplayer = false, singleplayer = false, serv_won = false, client_won = false;
+    player_is_server = false, player_is_client = false, multiplayer = false, singleplayer = false, serv_won = false, client_won = false,
+    possiblequeenside_castling = false, possiblekingside_castling = false;
     piecetracker* castling_rook_pt;
     QLabel* castling_rook_lbl;
 
@@ -99,7 +112,6 @@ private:
     //sound
     QMediaPlayer player;
 
-
 private slots:
     void SetupGUI();
     void NewGame();
@@ -123,10 +135,12 @@ private slots:
     void Delete_possible_moves();
     int GetxPosition(int);
     int GetyPosition(int);
+    bool Checkcapture(char, int, int);
     bool Check_yourself(char, int, int, int, int, piecetracker*);
     bool Check_opponent(int, int, piecetracker*);
-    bool Checkmate();
-    bool En_passant(char, int, int, int, int);
+    bool Checkmate(char);
+    bool L_En_passant(char, int, int);
+    bool R_En_passant(char, int, int);
     bool Castling(int, int, int, int, int);
     bool PossibleCastling(piecetracker*);
     void arraytovector(QByteArray);
