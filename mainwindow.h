@@ -48,6 +48,7 @@ public:
     void Makepiece(QString, char, char, int, int, int);
     void Getboundaries(char, int, int);
     bool playing_game = false;
+    QString AIboard;
     //game
     int possiblexmoves[64];
     int possibleymoves[64];
@@ -92,9 +93,9 @@ private:
     QLabel* castling_rook_lbl;
 
     //GUI
-    QLabel* lblname, *status, *menustatus, *gamestatus, *background, *new_frame, *welc_message;
+    QLabel* lblname, *status, *menustatus, *gamestatus, *background, *new_frame, *welc_message, *lblboard;
     QString playername, opponentname, leaderboardname;
-    QPushButton* btnyes, *btnno, *btnreturntomain, *btnplayagain;
+    QPushButton* btnyes, *btnno, *btnreturntomain, *btnplayagain, *showboard;
 
     //interaction
     QString question;

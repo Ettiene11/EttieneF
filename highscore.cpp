@@ -6,7 +6,7 @@ HighScore::HighScore()
 {
     //cout << "Constructor: skryf iets\n";
 //    scoresFile.setFileName("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/textfiles/scores.txt");
-    scoresFile.setFileName("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/textfiles/scores.txt");
+    scoresFile.setFileName("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Prakties 1/Chess_final/textfiles/scores.txt");
     if (scoresFile.open(QIODevice::ReadOnly))
     {
         //cout << "Constructor: file open\n";
@@ -59,7 +59,7 @@ void HighScore::addScore(QByteArray naam, int punt)
 //    scoresFile.open(":textfiles/scores.txt");
 //    scoresFile.setFileName(":textfiles/scores.txt");
 //    QFile scoresFile("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/build highscore/highscore/scores.txt");
-    QFile scoresFile("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/textfiles/scores.txt");
+    QFile scoresFile("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Prakties 1/Chess_final/textfiles/scores.txt");
 
     if (scoresFile.open(QIODevice::Truncate | QIODevice::WriteOnly))
 //    if (scoresFile.open(QIODevice::WriteOnly))

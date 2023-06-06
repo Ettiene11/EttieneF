@@ -16,24 +16,25 @@ StockfishConnector::StockfishConnector(QObject *parent) : QObject(parent)
 
 void StockfishConnector::processReadyRead()
 {
-    // Read the output from the process
-    QString data = QString::fromUtf8(Myprocess.readAllStandardOutput());
+        // Read the output from the process
+        QString data = QString::fromUtf8(Myprocess.readAllStandardOutput());
+        qDebug() << data;
 
-    // Find the position of "bestmove" in the output
-    int bestmoveIndex = data.indexOf("bestmove");
-    int playerbestindex = data.indexOf("ponder");
+        // Find the position of "bestmove" in the output
+        int bestmoveIndex = data.indexOf("bestmove");
+        int playerbestindex = data.indexOf("ponder");
 
-    // Extract the characters after "bestmove"
-    if (bestmoveIndex != -1)
-    {
-        QString bestmove = data.mid(bestmoveIndex + 9,4).trimmed();
-        QString playerbest = data.mid(playerbestindex + 7,4).trimmed();
-        if ((playerbest == "(non") || (bestmove == "(non"))
+        // Extract the characters after "bestmove"
+        if (bestmoveIndex != -1)
         {
-            bestmove = "none";
+            QString bestmove = data.mid(bestmoveIndex + 9,4).trimmed();
+            QString playerbest = data.mid(playerbestindex + 7,4).trimmed();
+            if ((playerbest == "(non") || (bestmove == "(non"))
+            {
+                bestmove = "none";
+            }
+            emit dataReceived(bestmove.toUtf8());
         }
-        emit dataReceived(bestmove.toUtf8());
-    }
 
 //            // Emit the outputReceived signal
 //    emit dataReceived(data.toUtf8());
@@ -45,6 +46,11 @@ bool StockfishConnector::writeData(QByteArray data)
         {
         Myprocess.write(data);
 //        Myprocess.waitForBytesWritten();
+    }
+
+    if (data == "d\n")
+    {
+        board = true;
     }
 
     return Myprocess.waitForBytesWritten();

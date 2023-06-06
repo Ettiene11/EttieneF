@@ -134,7 +134,7 @@ void MainWindow::AIreceive(QByteArray data)
             EndGame();
             menustatus->setText("Game over, Computer won!");
         }
-        gamestatus->show();
+//        gamestatus->show();
         board board;
         //move piece
         if (data != "none")
@@ -151,18 +151,33 @@ void MainWindow::AIreceive(QByteArray data)
             QLabel *p2 = piece2.next();
             if ((board.AssignxCoord(AIfrom_x) == t2->x_cor) && (board.AssignyCoord(AIfrom_y) == t2->y_cor))
             {
-                xdelta = (abs(board.AssignxCoord(AIfrom_x)-board.AssignxCoord(AIto_x)))/100;
-                ydelta =(abs(board.AssignyCoord(AIfrom_y)-board.AssignyCoord(AIto_y)))/100;
+                if (abs(board.AssignxCoord(AIfrom_x)-board.AssignxCoord(AIto_x)) == 0)
+                {
+                    xdelta = 0;
+                }else{
+                    xdelta = (abs(board.AssignxCoord(AIfrom_x)-board.AssignxCoord(AIto_x)))/100;
+
+                }
+                if (abs(board.AssignyCoord(AIfrom_y)-board.AssignyCoord(AIto_y)) == 0)
+                {
+                    ydelta = 0;
+                }else{
+                   ydelta =(abs(board.AssignyCoord(AIfrom_y)-board.AssignyCoord(AIto_y)))/100;
+                }
                 newx = board.AssignxCoord(AIfrom_x);
                 newy = board.AssignyCoord(AIfrom_y);
+//                t2->x_cor = board.AssignxCoord(AIto_x);
+//                t2->y_cor = board.AssignyCoord(AIto_y);
+//                p2->move(board.AssignxCoord(AIto_x),board.AssignyCoord(AIto_y));
                 if (t2->num_moves<9)   //we are only interested in moves 0-2, important that it stays 1 char for transfer
                 {++t2->num_moves;}
+                break;
             }
         }
 
-        timer->start();
         allmoves = allmoves + " " + chessposition;
-        qDebug() << data;
+        qDebug() << chessposition;
+        timer->start();
     }
 }
 
@@ -170,6 +185,11 @@ void MainWindow::moveAIpiece()
 {
     board board;
     ++counter;
+    if (counter > 100)
+    {
+        timer->stop();
+        counter = 100;
+    }
     QVectorIterator<piecetracker*> tracker2(piece_tracker);
     QVectorIterator<QLabel*> piece2(all_pieces);
 
@@ -188,7 +208,6 @@ void MainWindow::moveAIpiece()
                     all_pieces.removeOne(p2);
                     player.setMedia(QUrl::fromLocalFile("capture.wav"));
                     player.play();
-                    timer->stop();
                     break;
                 }
             }
@@ -246,7 +265,7 @@ void MainWindow::multiplayer_clicked()
     lblname->deleteLater();
     lblname->hide();
 
-    QFile scoresFile("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/textfiles/scores.txt");
+    QFile scoresFile("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Prakties 1/Chess_final/textfiles/scores.txt");
     if (scoresFile.open(QIODevice::ReadOnly | QIODevice::Text)){
         QTextStream stream(&scoresFile);
         QString line = stream.readAll();
@@ -342,7 +361,7 @@ void MainWindow::receive(QByteArray data)
 {
     if ((!playing_game) && (!((QString(data) == "endgame") || (QString(data) == "forfeit") || (QString(data) == "draw") || (QString(data) == "nodraw")
                               || (QString(data) == "yesdraw") || (QString(data) == "playagain") || (QString(data) == "playagainyes") || (QString(data) == "playagainno")
-                              || (QString(data) == "serverleft"))))
+                              || (QString(data) == "serverleft") || (QString(data) == "nocheckmate"))))
     {
         if (player_is_server == true)
         {
@@ -360,7 +379,7 @@ void MainWindow::receive(QByteArray data)
     }else{
         if ((QString(data) == "endgame") || (QString(data) == "forfeit") || (QString(data) == "draw") || (QString(data) == "nodraw")
                 || (QString(data) == "yesdraw") || (QString(data) == "playagain") || (QString(data) == "playagainyes") || (QString(data) == "playagainno")
-                || (QString(data) == "serverleft"))
+                || (QString(data) == "serverleft") || (QString(data) == "nocheckmate"))
         {
            if (QString(data) == "endgame")
            {
@@ -402,6 +421,9 @@ void MainWindow::receive(QByteArray data)
                 server->deleteLater();
                 server->disconnected();                              //bug
                 client->deleteLater();
+           }else if (QString(data) == "nocheckmate")
+           {
+              status->setText("You are in check, no checkmate.");
            }
         }else{
             arraytovector(data);
@@ -727,7 +749,7 @@ void MainWindow::EndGame()
 {
     if (multiplayer)
     {
-        QFile scoresFile("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Coding/Chess_final/textfiles/scores.txt");
+        QFile scoresFile("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Prakties 1/Chess_final/textfiles/scores.txt");
         if (scoresFile.open(QIODevice::ReadOnly | QIODevice::Text)){
             QTextStream stream(&scoresFile);
             QString line = stream.readAll();
@@ -1113,6 +1135,12 @@ bool MainWindow::Clicked_on_Piece(int x, int y)
                         }else{
                            gamestatus->setText(QString(turn) + "'s king is in check, no checkmate!");
                            gamestatus->show();
+                           if (player_is_client)
+                           {
+                               clientSend("nocheckmate");
+                           }else{
+                               serverSend("nocheckmate");
+                           }
                         }
                     }
 
@@ -1165,7 +1193,6 @@ void MainWindow::UpdateLeaderboard()
 
     HighScore hs;
     hs.addScore(playername.toUtf8(), score);
-//    hs.UpdateScore("piet");
 }
 
 void MainWindow::AImove()

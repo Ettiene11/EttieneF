@@ -25,6 +25,8 @@ private slots:
 
 private:
     QProcess Myprocess;
+    QString AIboard;
+    bool board = false;
 };
 
 #endif // STOCKFISHCONNECTOR_H
