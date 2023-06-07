@@ -27,6 +27,8 @@
 
 #include <QApplication>
 #include <QMediaPlayer>
+#include <QMediaPlaylist>
+#include <QVideoWidget>
 
 typedef struct piecetracker
 {
@@ -110,8 +112,10 @@ private:
     //leaderboard
     QLabel *scoredisplay;
 
-    //sound
+    //sound and animations
     QMediaPlayer player;
+    QMediaPlayer *player1;
+    QVideoWidget *videoWidget;
 
 private slots:
     void SetupGUI();
@@ -146,6 +150,7 @@ private slots:
     bool PossibleCastling(piecetracker*);
     void arraytovector(QByteArray);
     QByteArray stringtoarray();
+    void Playanimation(QString);
 
     //interaction
     void Forfeit();

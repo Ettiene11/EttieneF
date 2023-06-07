@@ -94,10 +94,26 @@ void MainWindow::SetupGUI()
         possiblexmoves[k] = 0;
         possibleymoves[k] = 0;
     }
+
+    player1 = new QMediaPlayer(this);
+    videoWidget = new QVideoWidget(this);
+    Playanimation("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Prakties 1/Chess_final/vids/Welcome.gif");
+}
+
+void MainWindow::Playanimation(QString path)
+{
+    player1->setVideoOutput(videoWidget);
+    player1->setMedia(QUrl::fromLocalFile(path)); //"C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Prakties 1/highscore/highscore/Win.gif"
+    videoWidget->show();
+    videoWidget->setFixedSize(200,200);
+    videoWidget->move(380,10);
+    player1->play();
 }
 
 void MainWindow::singleplayer_clicked()
 {
+    player1->stop();
+    videoWidget->hide();
     singleplayer = true;
     name->deleteLater();
     name->hide();
@@ -124,6 +140,7 @@ void MainWindow::AIreceive(QByteArray data)
     if (askbestmove)
     {
         status->setText("Your best move is " + data + ", " + QString(10)  + QString::number(hints) + " hints left.");
+        status->move(820,255);
         askbestmove = false;
     }else{
         counter = 0;
@@ -133,6 +150,7 @@ void MainWindow::AIreceive(QByteArray data)
             gamestatus->setText("Checkmate, Computer won!");
             EndGame();
             menustatus->setText("Game over, Computer won!");
+            Playanimation("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Prakties 1/Chess_final/vids/Lose.gif");
         }
 //        gamestatus->show();
         board board;
@@ -259,6 +277,8 @@ void MainWindow::convertChessPosition(const QString position)
 
 void MainWindow::multiplayer_clicked()
 {
+    player1->stop();
+    videoWidget->hide();
     multiplayer = true;
     name->deleteLater();
     name->hide();
@@ -345,6 +365,7 @@ void MainWindow::makeServer()
     menustatus->move(400,200);
     menustatus->show();
     player_is_server = true;
+    Playanimation("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Prakties 1/Chess_final/vids/Wait.gif");
 }
 
 void MainWindow::serverSend(QByteArray data)
@@ -385,10 +406,12 @@ void MainWindow::receive(QByteArray data)
            {
                 EndGame();
                 menustatus->setText(opponentname + " has won! Goodluck next time!");
+                Playanimation("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Prakties 1/Chess_final/vids/Lose.gif");
            }else if (QString(data) == "forfeit")
            {
                 EndGame();
                 menustatus->setText(opponentname + " has forfeited! You won!");          //show leaderboard and update score
+                Playanimation("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Prakties 1/Chess_final/vids/Win.gif");
            }else if (QString(data) == "draw")
            {
                 question = "draw";
@@ -401,6 +424,7 @@ void MainWindow::receive(QByteArray data)
            {
                EndGame();
                menustatus->setText("Close one! It's a draw.");
+               Playanimation("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Prakties 1/Chess_final/vids/Draw.gif");
            }else if ((QString(data) == "playagain"))
            {
                ans = true;
@@ -409,7 +433,7 @@ void MainWindow::receive(QByteArray data)
            }else if ((QString(data) == "playagainyes"))
            {
                 NewGame();
-                status->setText(opponentname + " joined for another game.");
+                status->setText(opponentname + " joined\nfor another game.");
            }else if ((QString(data) == "playagainno"))
           {
                SetupGUI();
@@ -487,6 +511,7 @@ void MainWindow::ansyes()
         btnno->deleteLater();
         EndGame();
         menustatus->setText("Close one! It's a draw.");
+        Playanimation("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Prakties 1/Chess_final/vids/Draw.gif");
         if (player_is_client)
         {
             clientSend("yesdraw");
@@ -591,6 +616,8 @@ QByteArray MainWindow::stringtoarray()
 
 void MainWindow::NewGame()
 {
+    player1->stop();
+    videoWidget->hide();
     QVectorIterator<QPushButton*> buttons(GUI);
     while (buttons.hasNext())
     {
@@ -747,6 +774,10 @@ void MainWindow::ResetGame()
 
 void MainWindow::EndGame()
 {
+    player1->stop();
+//    player1->deleteLater();
+    videoWidget->hide();
+//    videoWidget->deleteLater();
     if (multiplayer)
     {
         QFile scoresFile("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Prakties 1/Chess_final/textfiles/scores.txt");
@@ -801,8 +832,10 @@ void MainWindow::EndGame()
     if (((serv_won) && (player_is_server)) || ((client_won) && (player_is_client)))
     {
        menustatus->setText("Congratulations, you won!");       //update and show leaderboard
+       Playanimation("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Prakties 1/Chess_final/vids/Win.gif");
     }else if (((client_won) && (player_is_server)) || ((serv_won) && (player_is_client))){
        menustatus->setText(opponentname+ ", won! Good luck next time.");            //update and show leaderboard
+       Playanimation("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Prakties 1/Chess_final/vids/Lose.gif");
     }
 }
 
@@ -821,7 +854,6 @@ void MainWindow::Playagain()
         chessposition.clear();
         allmoves.clear();
     }
-
 }
 
 void MainWindow::Forfeit()
@@ -833,6 +865,7 @@ void MainWindow::Forfeit()
     }else{serverSend(str.toUtf8());}
     EndGame();
     menustatus->setText("You forfeited the game.");
+    Playanimation("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Prakties 1/Chess_final/vids/Lose.gif");
 }
 
 void MainWindow::Draw()
@@ -1717,30 +1750,9 @@ bool MainWindow::Check_opponent(int from_x, int from_y, piecetracker* piecetrack
 
 bool MainWindow::Checkmate(char team)
 {
-//    QVectorIterator<piecetracker*> tracker(piece_tracker);
-//    while (tracker.hasNext())
-//    {
-//        piecetracker *pt = tracker.next();
-//        if (pt->team == turn)
-//        {
-//            for (int i = 1; i <= 8; ++i)
-//            {
-//                for (int j = 1; j <= 8; ++j)
-//                {
-//                    if ((Validmove(pt->type, i, j)) && (Validpiecemove(pt->team,pt->type,pt->num_moves,GetxPosition(pt->x_cor), GetyPosition(pt->y_cor),i,j)))
-//                    {
-//                        if (!Check_yourself(pt->team,GetxPosition(pt->x_cor),GetyPosition(pt->y_cor),i,j,pt))
-//                        {
-//                            return false;
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-
     int temp_ogpossiblexmoves[64];
     int temp_ogpossibleymoves[64];
+
     QVectorIterator<piecetracker*> tracker(piece_tracker);
     while (tracker.hasNext())
     {

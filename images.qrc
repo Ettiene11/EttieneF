@@ -17,5 +17,10 @@
         <file>img/w_rook.png</file>
         <file>img/frame.png</file>
         <file>textfiles/scores.txt</file>
+        <file>vids/Draw.gif</file>
+        <file>vids/Lose.gif</file>
+        <file>vids/Wait.gif</file>
+        <file>vids/Welcome.gif</file>
+        <file>vids/Win.gif</file>
     </qresource>
 </RCC>

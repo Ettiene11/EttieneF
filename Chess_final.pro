@@ -31,6 +31,7 @@ SOURCES += \
         highscore.cpp \
         king.cpp \
         knight.cpp \
+        leaderboard.cpp \
         main.cpp \
         mainwindow.cpp \
         pawn.cpp \
@@ -43,9 +44,11 @@ HEADERS += \
         bishop.h \
         board.h \
         client.h \
+        connector.h \
         highscore.h \
         king.h \
         knight.h \
+        leaderboard.h \
         mainwindow.h \
         pawn.h \
         queen.h \
@@ -58,14 +61,19 @@ FORMS += \
 
 QT += network
 
-QT += multimedia
+QT += multimedia multimediawidgets
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-DISTFILES +=
+DISTFILES += \
+    vids/Draw.gif \
+    vids/Lose.gif \
+    vids/Wait.gif \
+    vids/Welcome.gif \
+    vids/Win.gif
 
 RESOURCES += \
     images.qrc
