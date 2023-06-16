@@ -98,6 +98,7 @@ void MainWindow::SetupGUI()
     player1 = new QMediaPlayer(this);
     videoWidget = new QVideoWidget(this);
     Playanimation("C:/Users/User/Documents/NWU/2023/Semester 1/REII 313/Prakties 1/Chess_final/vids/Welcome.gif");
+//    Playanimation(":vids/Welcome.gif");
 }
 
 void MainWindow::Playanimation(QString path)
